@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   Container,
   Flex,
@@ -11,10 +11,13 @@ import {
   useColorMode,
 } from '@chakra-ui/react'
 import { Building2, Moon, Sun } from 'lucide-react'
+import AuthModal from './AuthModal'
 
 const Header = () => {
   const { colorMode, toggleColorMode } = useColorMode()
   const [isScrolled, setIsScrolled] = useState(false)
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
+  const headerRef = useRef(null)
 
   // Scroll Detector to switch the menu positioning and bg color
   useEffect(() => {
@@ -27,8 +30,25 @@ const Header = () => {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  // Smooth scroll handler for navigation links
+  const handleSmoothScroll = (e, targetId) => {
+    e.preventDefault()
+    const element = document.getElementById(targetId)
+    if (element && headerRef.current) {
+      const headerHeight = headerRef.current.offsetHeight
+      const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
+      const offsetPosition = elementPosition - headerHeight
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth',
+      })
+    }
+  }
+
   return (
     <Flex
+      ref={headerRef}
       as="header"
       position={isScrolled ? 'sticky' : 'absolute'}
       top={0}
@@ -57,6 +77,7 @@ const Header = () => {
           <Flex display={{ base: 'none', md: 'flex' }} align="center" gap={8}>
             <Link
               href="#features"
+              onClick={(e) => handleSmoothScroll(e, 'features')}
               fontSize="sm"
               color="gray.600"
               _hover={{ color: 'gray.900' }}
@@ -66,6 +87,7 @@ const Header = () => {
             </Link>
             <Link
               href="#testimonials"
+              onClick={(e) => handleSmoothScroll(e, 'testimonials')}
               fontSize="sm"
               color="gray.600"
               _hover={{ color: 'gray.900' }}
@@ -75,6 +97,7 @@ const Header = () => {
             </Link>
             <Link
               href="#pricing"
+              onClick={(e) => handleSmoothScroll(e, 'pricing')}
               fontSize="sm"
               color="gray.600"
               _hover={{ color: 'gray.900' }}
@@ -82,10 +105,19 @@ const Header = () => {
             >
               Pricing
             </Link>
-            <Button variant="ghost" size="sm" colorScheme="gray">
+            <Button
+              variant="ghost"
+              size="sm"
+              colorScheme="gray"
+              onClick={() => setIsAuthModalOpen(true)}
+            >
               Log In
             </Button>
-            <Button size="sm" colorScheme="brand">
+            <Button
+              size="sm"
+              colorScheme="brand"
+              onClick={() => setIsAuthModalOpen(true)}
+            >
               Get Started
             </Button>
             <IconButton
@@ -98,6 +130,7 @@ const Header = () => {
           </Flex>
         </Flex>
       </Container>
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
     </Flex>
   )
 }

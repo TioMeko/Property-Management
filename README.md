@@ -49,7 +49,8 @@ npm run dev  # Development mode with nodemon
 
 ```bash
 cd frontend
-# To be scaffolded - see Milestone 0 in PRD
+npm install
+npm run dev  # Development server with Vite (typically runs on http://localhost:5173)
 ```
 
 ## API Endpoints
