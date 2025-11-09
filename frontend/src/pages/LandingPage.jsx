@@ -19,13 +19,15 @@ import {
   Users,
   TrendingUp,
 } from 'lucide-react'
-import Header from '../components/Header'
-import Hero from '../components/Hero'
+import Header from '../components/layout/Header'
+import Hero from '../components/layout/Hero'
 import Testimonials from '../components/Testimonials'
-import CTA from '../components/CTA'
-import Footer from '../components/Footer'
+import CTA from '../components/layout/CTA'
+import Footer from '../components/layout/Footer'
 import BackToTop from '../components/BackToTop'
-import FeatureCard from '../components/FeatureCard'
+import FeatureCard from '../components/ui/FeatureCard'
+import StatCard from '../components/ui/StatCard'
+import BenefitCard from '../components/ui/BenefitCard'
 
 const LandingPage = () => {
   return (
@@ -79,20 +81,12 @@ const LandingPage = () => {
                 company: 'Faster Resolution',
               },
             ].map((stat, i) => (
-              <VStack key={i} spacing={1}>
-                <Text
-                  fontSize={{ base: '3xl', md: '4xl' }}
-                  fontWeight="bold"
-                >
-                  {stat.value}
-                </Text>
-                <Text fontSize="sm" color="gray.600" _dark={{ color: 'gray.400' }}>
-                  {stat.label}
-                </Text>
-                <Text fontSize="xs" color="gray.500" _dark={{ color: 'gray.500' }}>
-                  {stat.company}
-                </Text>
-              </VStack>
+              <StatCard
+                key={i}
+                label={stat.label}
+                value={stat.value}
+                company={stat.company}
+              />
             ))}
           </SimpleGrid>
         </Container>
@@ -218,33 +212,12 @@ const LandingPage = () => {
                     'Enterprise-grade reliability ensures your business runs without interruption.',
                 },
               ].map((benefit, i) => (
-                <VStack key={i} textAlign="center" spacing={4}>
-                  <Flex
-                    align="center"
-                    justify="center"
-                    w={16}
-                    h={16}
-                    borderRadius="2xl"
-                    bg="brand.100"
-                    _dark={{ bg: 'brand.900' }}
-                  >
-                    <Icon
-                      as={benefit.icon}
-                      boxSize={8}
-                      color="brand.500"
-                    />
-                  </Flex>
-                  <Heading as="h3" size="lg">
-                    {benefit.title}
-                  </Heading>
-                  <Text
-                    color="gray.600"
-                    lineHeight="tall"
-                    _dark={{ color: 'gray.400' }}
-                  >
-                    {benefit.description}
-                  </Text>
-                </VStack>
+                <BenefitCard
+                  key={i}
+                  icon={benefit.icon}
+                  title={benefit.title}
+                  description={benefit.description}
+                />
               ))}
             </SimpleGrid>
           </VStack>

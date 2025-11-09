@@ -11,7 +11,7 @@ import {
   useColorMode,
 } from '@chakra-ui/react'
 import { Building2, Moon, Sun } from 'lucide-react'
-import AuthModal from './AuthModal'
+import AuthModal from '../AuthModal'
 
 const Header = () => {
   const { colorMode, toggleColorMode } = useColorMode()
