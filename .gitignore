@@ -68,3 +68,4 @@ docker-compose.override.yml
 *.zip
 *.tar
 *.tar.gz
+/frontend/.vite
