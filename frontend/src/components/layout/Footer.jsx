@@ -11,6 +11,7 @@ import {
   Icon,
 } from '@chakra-ui/react'
 import { Building2 } from 'lucide-react'
+import React from 'react'
 
 const Footer = () => {
   return (

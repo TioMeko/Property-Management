@@ -1,4 +1,5 @@
-import { VStack, Flex, Icon, Heading, Text } from '@chakra-ui/react'
+import { VStack, Flex, Icon, Heading, Text } from "@chakra-ui/react";
+import React from "react";
 
 const BenefitCard = ({ icon, title, description }) => {
   return (
@@ -10,27 +11,18 @@ const BenefitCard = ({ icon, title, description }) => {
         h={16}
         borderRadius="2xl"
         bg="brand.100"
-        _dark={{ bg: 'brand.900' }}
+        _dark={{ bg: "brand.900" }}
       >
-        <Icon
-          as={icon}
-          boxSize={8}
-          color="brand.500"
-        />
+        <Icon as={icon} boxSize={8} color="brand.500" />
       </Flex>
       <Heading as="h3" size="lg">
         {title}
       </Heading>
-      <Text
-        color="gray.600"
-        lineHeight="tall"
-        _dark={{ color: 'gray.400' }}
-      >
+      <Text color="gray.600" lineHeight="tall" _dark={{ color: "gray.400" }}>
         {description}
       </Text>
     </VStack>
-  )
-}
+  );
+};
 
-export default BenefitCard
-
+export default BenefitCard;

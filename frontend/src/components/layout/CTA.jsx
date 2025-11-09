@@ -7,8 +7,9 @@ import {
   HStack,
   Flex,
   Icon,
-} from '@chakra-ui/react'
-import { ArrowRight, CheckCircle2 } from 'lucide-react'
+} from "@chakra-ui/react";
+import { ArrowRight, CheckCircle2 } from "lucide-react";
+import React from "react";
 
 const CTA = () => {
   return (
@@ -17,30 +18,23 @@ const CTA = () => {
       py={24}
       bgGradient="linear(to-br, brand.50, gray.50, teal.50)"
       _dark={{
-        bgGradient: 'linear(to-br, brand.900, gray.900, teal.900)',
+        bgGradient: "linear(to-br, brand.900, gray.900, teal.900)",
       }}
     >
       <Container maxW="container.xl">
         <VStack maxW="3xl" mx="auto" textAlign="center" spacing={8}>
           <Heading
             as="h2"
-            fontSize={{ base: '3xl', md: '5xl' }}
+            fontSize={{ base: "3xl", md: "5xl" }}
             fontWeight="bold"
           >
             Ready to streamline your property management?
           </Heading>
-          <Text
-            fontSize="lg"
-            color="gray.600"
-            _dark={{ color: 'gray.400' }}
-          >
-            Join hundreds of property managers who trust Conglomo to run
-            their business efficiently.
+          <Text fontSize="lg" color="gray.600" _dark={{ color: "gray.400" }}>
+            Join hundreds of property managers who trust Conglomo to run their
+            business efficiently.
           </Text>
-          <Flex
-            direction={{ base: 'column', sm: 'row' }}
-            gap={4}
-          >
+          <Flex direction={{ base: "column", sm: "row" }} gap={4}>
             <Button
               size="lg"
               colorScheme="brand"
@@ -55,11 +49,11 @@ const CTA = () => {
             </Button>
           </Flex>
           <Flex
-            direction={{ base: 'column', sm: 'row' }}
+            direction={{ base: "column", sm: "row" }}
             gap={6}
             fontSize="sm"
             color="gray.600"
-            _dark={{ color: 'gray.400' }}
+            _dark={{ color: "gray.400" }}
           >
             <HStack spacing={2}>
               <Icon as={CheckCircle2} boxSize={4} color="teal.500" />
@@ -77,8 +71,7 @@ const CTA = () => {
         </VStack>
       </Container>
     </Flex>
-  )
-}
+  );
+};
 
-export default CTA
-
+export default CTA;

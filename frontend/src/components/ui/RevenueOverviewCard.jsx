@@ -8,24 +8,20 @@ import {
   Badge,
   SimpleGrid,
   Icon,
-} from '@chakra-ui/react'
-import { TrendingUp } from 'lucide-react'
+} from "@chakra-ui/react";
+import { TrendingUp } from "lucide-react";
+import React from "react";
 
 const RevenueOverviewCard = ({
-  title = 'Monthly Revenue',
+  title = "Monthly Revenue",
   totalRevenue,
   trendAmount,
-  period = 'December 2024',
+  period = "December 2024",
   stats = [],
-  bgGradient = 'linear(to-br, brand.500, brand.700)',
+  bgGradient = "linear(to-br, brand.500, brand.700)",
 }) => {
   return (
-    <Box
-      p={8}
-      borderRadius="2xl"
-      bgGradient={bgGradient}
-      color="white"
-    >
+    <Box p={8} borderRadius="2xl" bgGradient={bgGradient} color="white">
       <VStack align="stretch" spacing={6}>
         <Flex justify="space-between" align="start">
           <VStack align="start" spacing={2}>
@@ -71,8 +67,7 @@ const RevenueOverviewCard = ({
         </SimpleGrid>
       </VStack>
     </Box>
-  )
-}
+  );
+};
 
-export default RevenueOverviewCard
-
+export default RevenueOverviewCard;
