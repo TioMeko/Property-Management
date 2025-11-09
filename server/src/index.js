@@ -38,3 +38,5 @@ async function start() {
     console.log(`API listening on http://localhost:${config.port}`)
   );
 }
+
+start();
