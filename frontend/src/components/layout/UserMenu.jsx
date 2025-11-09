@@ -12,12 +12,22 @@ import {
   Box,
 } from "@chakra-ui/react";
 import { User, Settings, HelpCircle, LogOut } from "lucide-react";
-
+import { useNavigate } from 'react-router-dom';
+import React from "react";
 const UserMenu = ({
   userName = "John Doe",
   userRole = "Tenant",
   isCompact = false,
 }) => {
+  const navigate = useNavigate();
+  
+  const handleSettingsClick = () => {
+    const settingsPath = userRole === 'Tenant' 
+      ? '/tenant/settings' 
+      : '/landlord/settings';
+    navigate(settingsPath);
+  };
+
   return (
     <Menu>
       <MenuButton>
@@ -72,7 +82,12 @@ const UserMenu = ({
         </Box>
         <MenuDivider />
         <MenuItem icon={<Icon as={User} boxSize={4} />}>My Profile</MenuItem>
-        <MenuItem icon={<Icon as={Settings} boxSize={4} />}>Settings</MenuItem>
+        <MenuItem 
+          icon={<Icon as={Settings} boxSize={4} />}
+          onClick={handleSettingsClick}
+        >
+          Settings
+        </MenuItem>
         <MenuItem icon={<Icon as={HelpCircle} boxSize={4} />}>
           Help & Support
         </MenuItem>

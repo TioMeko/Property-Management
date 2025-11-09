@@ -20,6 +20,7 @@ import {
   CheckCircle2,
   Clock,
 } from 'lucide-react'
+import React from 'react'
 import DashboardLayout from '../components/layout/DashboardLayout'
 import MetricCard from '../components/ui/MetricCard'
 import ProgressCard from '../components/ui/ProgressCard'

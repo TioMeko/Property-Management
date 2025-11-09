@@ -6,9 +6,10 @@ import {
   Heading,
   Text,
   Icon,
-} from '@chakra-ui/react'
+} from "@chakra-ui/react";
+import React from "react";
 
-const FeatureCard = ({ icon, title, description, color = 'brand.500' }) => {
+const FeatureCard = ({ icon, title, description, color = "brand.500" }) => {
   return (
     <Card
       borderRadius="lg"
@@ -17,15 +18,15 @@ const FeatureCard = ({ icon, title, description, color = 'brand.500' }) => {
       bg="white"
       transition="all 0.3s"
       _hover={{
-        borderColor: 'gray.300',
-        transform: 'translateY(-4px)',
-        shadow: 'lg',
+        borderColor: "gray.300",
+        transform: "translateY(-4px)",
+        shadow: "lg",
       }}
       _dark={{
-        borderColor: 'gray.700',
-        bg: 'gray.800',
+        borderColor: "gray.700",
+        bg: "gray.800",
         _hover: {
-          borderColor: 'gray.600',
+          borderColor: "gray.600",
         },
       }}
     >
@@ -36,7 +37,7 @@ const FeatureCard = ({ icon, title, description, color = 'brand.500' }) => {
             boxSize={10}
             color={color}
             transition="transform 0.3s"
-            _groupHover={{ transform: 'scale(1.1)' }}
+            _groupHover={{ transform: "scale(1.1)" }}
           />
           <Heading as="h3" size="md">
             {title}
@@ -44,17 +45,12 @@ const FeatureCard = ({ icon, title, description, color = 'brand.500' }) => {
         </VStack>
       </CardHeader>
       <CardBody pt={0}>
-        <Text
-          color="gray.600"
-          lineHeight="tall"
-          _dark={{ color: 'gray.400' }}
-        >
+        <Text color="gray.600" lineHeight="tall" _dark={{ color: "gray.400" }}>
           {description}
         </Text>
       </CardBody>
     </Card>
-  )
-}
+  );
+};
 
-export default FeatureCard
-
+export default FeatureCard;

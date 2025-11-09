@@ -1,4 +1,5 @@
 import { VStack, Text } from '@chakra-ui/react'
+import React from 'react'
 
 const StatCard = ({ label, value, company }) => {
   return (

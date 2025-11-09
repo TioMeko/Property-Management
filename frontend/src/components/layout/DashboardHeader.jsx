@@ -6,17 +6,16 @@ import {
   Text,
   HStack,
   useColorMode,
-} from '@chakra-ui/react'
-import {
-  Menu,
-  Moon,
-  Sun,
-  Bell,
-} from 'lucide-react'
-import UserMenu from './UserMenu'
-
-const DashboardHeader = ({ onOpenMenu, title = 'Dashboard', userType = 'tenant' }) => {
-  const { colorMode, toggleColorMode } = useColorMode()
+} from "@chakra-ui/react";
+import { Menu, Moon, Sun, Bell } from "lucide-react";
+import UserMenu from "./UserMenu";
+import React from "react";
+const DashboardHeader = ({
+  onOpenMenu,
+  title = "Dashboard",
+  userType = "tenant",
+}) => {
+  const { colorMode, toggleColorMode } = useColorMode();
 
   return (
     <Flex
@@ -29,19 +28,23 @@ const DashboardHeader = ({ onOpenMenu, title = 'Dashboard', userType = 'tenant' 
       borderColor="gray.200"
       bg="white"
       _dark={{
-        borderColor: 'gray.700',
-        bg: 'gray.800',
+        borderColor: "gray.700",
+        bg: "gray.800",
       }}
     >
       <HStack spacing={4}>
         <IconButton
           icon={<Icon as={Menu} />}
-          display={{ base: 'flex', lg: 'none' }}
+          display={{ base: "flex", lg: "none" }}
           variant="ghost"
           onClick={onOpenMenu}
           aria-label="Open menu"
         />
-        <Text fontSize="xl" fontWeight="semibold" display={{ base: 'none', md: 'block' }}>
+        <Text
+          fontSize="xl"
+          fontWeight="semibold"
+          display={{ base: "none", md: "block" }}
+        >
           {title}
         </Text>
       </HStack>
@@ -64,22 +67,21 @@ const DashboardHeader = ({ onOpenMenu, title = 'Dashboard', userType = 'tenant' 
           />
         </IconButton>
         <IconButton
-          icon={<Icon as={colorMode === 'light' ? Moon : Sun} />}
+          icon={<Icon as={colorMode === "light" ? Moon : Sun} />}
           onClick={toggleColorMode}
           variant="ghost"
           aria-label="Toggle color mode"
         />
-        <Box display={{ base: 'none', md: 'block' }}>
-          <UserMenu 
-            userName="John Doe" 
-            userRole={userType === 'tenant' ? 'Tenant' : 'Landlord'}
+        <Box display={{ base: "none", md: "block" }}>
+          <UserMenu
+            userName="John Doe"
+            userRole={userType === "tenant" ? "Tenant" : "Landlord"}
             isCompact
           />
         </Box>
       </HStack>
     </Flex>
-  )
-}
+  );
+};
 
-export default DashboardHeader
-
+export default DashboardHeader;

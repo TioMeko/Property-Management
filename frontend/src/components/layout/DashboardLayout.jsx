@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState } from "react";
 import {
   Flex,
   Drawer,
@@ -6,35 +6,42 @@ import {
   DrawerContent,
   DrawerCloseButton,
   useDisclosure,
-} from '@chakra-ui/react'
-import Sidebar from './Sidebar'
-import DashboardHeader from './DashboardHeader'
+} from "@chakra-ui/react";
+import React from "react";
+import Sidebar from "./Sidebar";
+import DashboardHeader from "./DashboardHeader";
 
-const DashboardLayout = ({ children, userType = 'tenant' }) => {
-  const { isOpen, onOpen, onClose } = useDisclosure()
-  const [isCollapsed, setIsCollapsed] = useState(true)
+const DashboardLayout = ({ children, userType = "tenant" }) => {
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [isCollapsed, setIsCollapsed] = useState(true);
 
   const handleToggleCollapse = () => {
-    setIsCollapsed(!isCollapsed)
-  }
+    setIsCollapsed(!isCollapsed);
+  };
 
   return (
-    <Flex h="100vh" overflow="hidden" bg="gray.50" _dark={{ bg: 'gray.900' }} w="full">
+    <Flex
+      h="100vh"
+      overflow="hidden"
+      bg="gray.50"
+      _dark={{ bg: "gray.900" }}
+      w="full"
+    >
       {/* Desktop Sidebar */}
       <Flex
-        display={{ base: 'none', lg: 'flex' }}
-        w={isCollapsed ? '80px' : '280px'}
+        display={{ base: "none", lg: "flex" }}
+        w={isCollapsed ? "80px" : "280px"}
         borderRight="1px"
         borderColor="gray.200"
         bg="white"
         transition="width 0.2s"
         _dark={{
-          borderColor: 'gray.700',
-          bg: 'gray.800',
+          borderColor: "gray.700",
+          bg: "gray.800",
         }}
       >
-        <Sidebar 
-          userType={userType} 
+        <Sidebar
+          userType={userType}
           isCollapsed={isCollapsed}
           onToggleCollapse={handleToggleCollapse}
         />
@@ -46,15 +53,11 @@ const DashboardLayout = ({ children, userType = 'tenant' }) => {
         <DrawerContent
           bg="white"
           _dark={{
-            bg: 'gray.800',
+            bg: "gray.800",
           }}
         >
           <DrawerCloseButton />
-          <Sidebar 
-            userType={userType} 
-            onClose={onClose}
-            isCollapsed={false}
-          />
+          <Sidebar userType={userType} onClose={onClose} isCollapsed={false} />
         </DrawerContent>
       </Drawer>
 
@@ -68,15 +71,14 @@ const DashboardLayout = ({ children, userType = 'tenant' }) => {
           flex={1}
           overflow="auto"
           bg="gray.50"
-          _dark={{ bg: 'gray.900' }}
+          _dark={{ bg: "gray.900" }}
           w="full"
         >
           {children}
         </Flex>
       </Flex>
     </Flex>
-  )
-}
+  );
+};
 
-export default DashboardLayout
-
+export default DashboardLayout;

@@ -1,13 +1,14 @@
-import {
-  Box,
-  Flex,
-  Text,
-  Icon,
-  VStack,
-} from '@chakra-ui/react'
-import { ChevronRight } from 'lucide-react'
+import { Box, Flex, Text, Icon, VStack } from "@chakra-ui/react";
+import { ChevronRight } from "lucide-react";
+import React from "react";
 
-const QuickActionCard = ({ icon, title, description, onClick, colorScheme = 'brand' }) => {
+const QuickActionCard = ({
+  icon,
+  title,
+  description,
+  onClick,
+  colorScheme = "brand",
+}) => {
   return (
     <Box
       p={5}
@@ -20,12 +21,12 @@ const QuickActionCard = ({ icon, title, description, onClick, colorScheme = 'bra
       onClick={onClick}
       _hover={{
         borderColor: `${colorScheme}.300`,
-        transform: 'translateY(-2px)',
-        shadow: 'md',
+        transform: "translateY(-2px)",
+        shadow: "md",
       }}
       _dark={{
-        borderColor: 'gray.700',
-        bg: 'gray.800',
+        borderColor: "gray.700",
+        bg: "gray.800",
         _hover: {
           borderColor: `${colorScheme}.600`,
         },
@@ -48,7 +49,7 @@ const QuickActionCard = ({ icon, title, description, onClick, colorScheme = 'bra
             <Text fontWeight="semibold" fontSize="md">
               {title}
             </Text>
-            <Text fontSize="sm" color="gray.600" _dark={{ color: 'gray.400' }}>
+            <Text fontSize="sm" color="gray.600" _dark={{ color: "gray.400" }}>
               {description}
             </Text>
           </VStack>
@@ -57,12 +58,11 @@ const QuickActionCard = ({ icon, title, description, onClick, colorScheme = 'bra
           as={ChevronRight}
           boxSize={5}
           color="gray.400"
-          _dark={{ color: 'gray.500' }}
+          _dark={{ color: "gray.500" }}
         />
       </Flex>
     </Box>
-  )
-}
+  );
+};
 
-export default QuickActionCard
-
+export default QuickActionCard;
