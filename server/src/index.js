@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import morgan from "morgan";
 import { config } from "./config/env.js";
+import { connectDB } from "./config/db.js";
 
 // route modules
 import authRoutes from "./routes/auth.js";
@@ -26,9 +27,14 @@ app.use("/lease", leaseRoutes);
 // generic error handler (keeps responses consistent)
 app.use((err, _req, res, _next) => {
   console.error(err);
-  res.status(err.status || 500).json({ message: err.message || "Server error" });
+  res
+    .status(err.status || 500)
+    .json({ message: err.message || "Server error" });
 });
 
-app.listen(config.port, () =>
-  console.log(`API listening on http://localhost:${config.port}`)
-);
+async function start() {
+  await connectDB();
+  app.listen(config.port, () => 
+    console.log(`API listening on http://localhost:${config.port}`)
+  );
+}
