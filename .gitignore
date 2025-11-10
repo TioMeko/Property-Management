@@ -1,12 +1,12 @@
 # --- Node & Dependency Directories ---
 node_modules/
-client/node_modules/
+frontend/node_modules/
 server/node_modules/
 
 # --- Build Outputs ---
 dist/
 build/
-client/build/
+frontend/build/
 server/dist/
 
 # --- Logs ---
@@ -39,8 +39,8 @@ Thumbs.db
 *.temp
 .cache/
 coverage/
-client/.next/
-client/.cache/
+frontend/.next/
+frontend/.cache/
 server/.cache/
 *.pid
 *.seed

@@ -1,11 +1,29 @@
 import { Router } from "express";
+import { Payment } from "../models/Payment.js";
+import { authRequired } from "../middleware/authMiddleware.js";
+
 const router = Router();
 
-const payments = [
-  { id: 1, date: "2025-10-01", amount: 1450, status: "paid" },
-  { id: 2, date: "2025-11-01", amount: 1450, status: "pending" }
-];
+// GET /payments  -> current tenant payments
+router.get("/", authRequired, async (req, res, next) => {
+  try {
+    const tenantId = req.user.id;
 
-router.get("/", (_req, res) => res.json(payments));
+    const payments = await Payment.find({ tenant: tenantId })
+      .sort({ date: -1 })
+      .lean();
+
+    res.json(
+      payments.map(p => ({
+        id: p._id,
+        date: p.date,
+        amount: p.amount,
+        status: p.status
+      }))
+    );
+  } catch (err) {
+    next(err);
+  }
+});
 
 export default router;
