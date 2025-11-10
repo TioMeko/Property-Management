@@ -179,6 +179,8 @@ This document outlines all the data requirements for each component and page in 
   "metrics": {
     "rentStatus": {
       "status": "Paid" | "Pending" | "Overdue",
+      "amount": "number",
+      "formatted": "string",
       "dueDate": "string",
       "timestamp": "ISO 8601 datetime"
     },
@@ -190,10 +192,22 @@ This document outlines all the data requirements for each component and page in 
     },
     "maintenance": {
       "activeRequests": "number",
-      "pendingRequests": "number"
+      "pendingRequests": "number",
+      "latestRequest": {
+        "id": "string",
+        "title": "string",
+        "status": "string",
+        "date": "string"
+      } | null
     },
     "messages": {
-      "unread": "number"
+      "unread": "number",
+      "latestMessage": {
+        "id": "string",
+        "from": "string",
+        "preview": "string",
+        "date": "string"
+      } | null
     }
   },
   "property": {
@@ -251,6 +265,141 @@ This document outlines all the data requirements for each component and page in 
   ]
 }
 ```
+
+---
+
+### Maintenance Page
+
+**Endpoint:** `GET /api/maintenance/requests`
+
+**Required Data:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "string",
+      "title": "string",
+      "description": "string",
+      "status": "pending" | "in_progress" | "scheduled" | "completed" | "cancelled",
+      "priority": "low" | "medium" | "high" | "urgent",
+      "category": "plumbing" | "electrical" | "hvac" | "appliance" | "structural" | "pest" | "other",
+      "createdAt": "ISO 8601 datetime",
+      "scheduledDate": "ISO 8601 datetime | null",
+      "completedDate": "ISO 8601 datetime | null",
+      "assignedTo": {
+        "id": "string",
+        "name": "string",
+        "avatarUrl": "string | null",
+        "avatarBg": "string"
+      } | null,
+      "permissionToEnter": "boolean",
+      "notes": "string | null"
+    }
+  ]
+}
+```
+
+**Create Request Endpoint:** `POST /api/maintenance/requests`
+
+**Request Body:**
+```json
+{
+  "title": "string",
+  "description": "string",
+  "category": "plumbing" | "electrical" | "hvac" | "appliance" | "structural" | "pest" | "other",
+  "priority": "low" | "medium" | "high" | "urgent",
+  "permissionToEnter": "boolean"
+}
+```
+
+**Filtering & Search:**
+- Status filter: `?status=pending|in_progress|scheduled|completed`
+- Priority filter: `?priority=low|medium|high|urgent`
+- Search: `?search=query` (searches title and description)
+
+---
+
+### Payments Page
+
+**Endpoint:** `GET /api/payments/balance`
+
+**Required Data (Current Balance):**
+```json
+{
+  "success": true,
+  "data": {
+    "amount": "number",
+    "dueDate": "ISO 8601 datetime",
+    "lateFee": "number",
+    "status": "pending" | "paid" | "overdue" | "partial"
+  }
+}
+```
+
+**Endpoint:** `GET /api/payments/history`
+
+**Required Data (Payment History):**
+```json
+{
+  "success": true,
+  "data": {
+    "payments": [
+      {
+        "id": "string",
+        "amount": "number",
+        "dueDate": "ISO 8601 datetime",
+        "paidDate": "ISO 8601 datetime | null",
+        "status": "paid" | "pending" | "overdue" | "partial",
+        "paymentMethod": "credit_card" | "bank_transfer" | "mobile_payment" | null,
+        "transactionId": "string | null"
+      }
+    ],
+    "stats": {
+      "totalPaid": "number",
+      "onTimePayments": "number",
+      "averagePaymentDay": "number"
+    }
+  }
+}
+```
+
+**Process Payment Endpoint:** `POST /api/payments`
+
+**Request Body:**
+```json
+{
+  "amount": "number",
+  "paymentMethod": "credit_card" | "bank_transfer" | "mobile_payment",
+  "paymentDetails": {
+    "cardNumber": "string",
+    "cardName": "string",
+    "expiryDate": "string",
+    "cvv": "string"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "transactionId": "string",
+    "status": "completed" | "pending" | "failed",
+    "receiptUrl": "string"
+  }
+}
+```
+
+**Download Receipt Endpoint:** `GET /api/payments/:id/receipt`
+
+**Response:** PDF file or receipt URL
+
+**Query Parameters:**
+- Limit history: `?limit=12`
+- Date range: `?from=YYYY-MM-DD&to=YYYY-MM-DD`
+- Status filter: `?status=paid|pending|overdue`
 
 ---
 
@@ -412,6 +561,7 @@ This document outlines all the data requirements for each component and page in 
   trendValue?: string;        // e.g., "+12.5%"
   bgGradient?: string;        // Optional gradient background
   onClick?: () => void;       // Optional click handler
+  tooltipLabel?: string;      // Optional tooltip shown on icon hover (e.g., "Amount Paid: $1,250")
 }
 ```
 
@@ -554,6 +704,101 @@ This document outlines all the data requirements for each component and page in 
 
 ---
 
+### MaintenanceRequestCard
+
+**Props Schema:**
+```typescript
+{
+  request: {
+    id: string;
+    title: string;
+    description: string;
+    status: 'pending' | 'in_progress' | 'scheduled' | 'completed' | 'cancelled';
+    priority: 'low' | 'medium' | 'high' | 'urgent';
+    category: 'plumbing' | 'electrical' | 'hvac' | 'appliance' | 'structural' | 'pest' | 'other';
+    createdAt: string;        // ISO 8601 datetime
+    scheduledDate?: string;   // ISO 8601 datetime
+    assignedTo?: {
+      name: string;
+      avatarUrl?: string;
+      avatarBg: string;
+    };
+  };
+  onClick?: (request) => void;
+  onEdit?: (request) => void;
+  onDelete?: (request) => void;
+  onMessage?: (request) => void;
+}
+```
+
+---
+
+### NewRequestModal
+
+**Props Schema:**
+```typescript
+{
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (formData: {
+    title: string;
+    description: string;
+    category: string;
+    priority: string;
+    permissionToEnter: boolean;
+  }) => Promise<void>;
+}
+```
+
+---
+
+### PaymentCard
+
+**Props Schema:**
+```typescript
+{
+  payment: {
+    id: string;
+    amount: number;
+    dueDate: string;
+    paidDate?: string;
+    status: 'paid' | 'pending' | 'overdue' | 'partial';
+    paymentMethod?: 'credit_card' | 'bank_transfer' | 'mobile_payment';
+    transactionId?: string;
+  };
+  onDownloadReceipt?: (payment: Payment) => void;
+}
+```
+
+---
+
+### PaymentModal
+
+**Props Schema:**
+```typescript
+{
+  isOpen: boolean;
+  onClose: () => void;
+  paymentInfo: {
+    id: string;
+    amount: number;
+    dueDate: string;
+    lateFee: number;
+  };
+  onSubmit: (paymentData: {
+    cardNumber: string;
+    cardName: string;
+    expiryDate: string;
+    cvv: string;
+    amount: number;
+    paymentMethod: 'credit_card' | 'bank_transfer' | 'mobile_payment';
+    paymentId: string;
+  }) => Promise<void>;
+}
+```
+
+---
+
 ### Breadcrumbs
 
 **Props Schema:**
@@ -612,16 +857,24 @@ This document outlines all the data requirements for each component and page in 
 ### Tenant
 - `GET /api/tenant/dashboard` - Get tenant dashboard data
 - `GET /api/tenant/property` - Get current property details
-- `GET /api/tenant/payments` - Get payment history
-- `POST /api/tenant/payments` - Make payment
 - `GET /api/tenant/lease` - Get lease details
+
+### Payments
+- `GET /api/payments/balance` - Get current balance and due date
+- `GET /api/payments/history` - Get payment history
+  - Query params: `?limit=12&from=YYYY-MM-DD&to=YYYY-MM-DD&status=paid`
+- `POST /api/payments` - Process payment
+- `GET /api/payments/:id` - Get payment details
+- `GET /api/payments/:id/receipt` - Download payment receipt
 
 ### Maintenance
 - `GET /api/maintenance/requests` - Get all maintenance requests
+  - Query params: `?status=pending&priority=high&search=query`
 - `POST /api/maintenance/requests` - Create maintenance request
 - `GET /api/maintenance/requests/:id` - Get request details
 - `PUT /api/maintenance/requests/:id` - Update request
-- `DELETE /api/maintenance/requests/:id` - Delete request
+- `DELETE /api/maintenance/requests/:id` - Cancel/delete request
+- `POST /api/maintenance/requests/:id/images` - Upload images for request
 
 ### Messages
 - `GET /api/messages` - Get all messages
@@ -815,9 +1068,11 @@ interface Notification {
 3. Lease management
 
 ### Phase 3 - Payments & Maintenance
-1. Payment processing
-2. Payment history
-3. Maintenance requests CRUD
+1. Payment processing ✅
+2. Payment history ✅
+3. Maintenance requests CRUD ✅
+4. Maintenance request filtering and search ✅
+5. Maintenance request status tracking ✅
 
 ### Phase 4 - Communication & Notifications
 1. Messaging system
@@ -832,7 +1087,12 @@ interface Notification {
 
 ---
 
-**Document Version:** 1.0  
-**Last Updated:** November 9, 2025  
-**Maintainer:** Development Team
+**Document Version:** 1.3  
+**Last Updated:** November 10, 2025  
+**Maintainer:** Development Team  
+
+**Changelog:**
+- v1.3 (Nov 10, 2025): Added Payments page data schema with current balance, payment history, and payment processing. Added PaymentCard and PaymentModal components. Added payment API endpoints with receipt download functionality
+- v1.2 (Nov 10, 2025): Added Maintenance page data schema, MaintenanceRequestCard and NewRequestModal components, maintenance API endpoints with filtering and search capabilities
+- v1.1 (Nov 10, 2025): Added tooltip support to MetricCard component and enhanced Tenant Dashboard metrics with detailed data for tooltips (amount paid, latest maintenance request, latest message preview)
 

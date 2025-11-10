@@ -801,6 +801,256 @@ CREATE INDEX idx_messages_search ON messages
 }
 ```
 
+### Tenant Dashboard Response
+```json
+{
+  "success": true,
+  "data": {
+    "tenant": {
+      "firstName": "string"
+    },
+    "rentStatus": {
+      "status": "Paid" | "Pending" | "Overdue",
+      "amount": "number",
+      "lastPaidDate": "ISO 8601 datetime",
+      "nextDueDate": "ISO 8601 datetime",
+      "daysUntilDue": "number"
+    },
+    "maintenance": {
+      "activeCount": "number",
+      "requests": [
+        {
+          "id": "UUID",
+          "title": "string",
+          "status": "string",
+          "statusColor": "string",
+          "date": "ISO 8601 datetime"
+        }
+      ]
+    },
+    "messages": {
+      "unreadCount": "number",
+      "latest": {
+        "from": "string",
+        "preview": "string",
+        "date": "ISO 8601 datetime"
+      } | null
+    },
+    "property": {
+      "name": "string",
+      "address": "string",
+      "monthlyRent": "number",
+      "leaseEnd": "string",
+      "securityDeposit": "number",
+      "landlord": {
+        "name": "string",
+        "fullName": "string",
+        "avatar": {
+          "name": "string",
+          "bg": "string"
+        }
+      }
+    },
+    "recentActivity": [
+      {
+        "icon": "string",
+        "color": "string",
+        "title": "string",
+        "date": "ISO 8601 datetime"
+      }
+    ]
+  },
+  "timestamp": "2024-12-15T10:30:00Z"
+}
+```
+
+**Notes:**
+- The dashboard response aggregates data from multiple models (Lease, Payment, MaintenanceRequest, Message)
+- `rentStatus.amount` should come from the most recent Payment record
+- `maintenance.requests` should be sorted by date descending, limited to most recent active requests
+- `messages.latest` should be the most recent unread message or null if none exist
+- All currency values should be returned as numbers (backend handles formatting)
+
+### Maintenance Requests Response
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "UUID",
+      "propertyId": "UUID",
+      "unitId": "UUID | null",
+      "tenantId": "UUID",
+      "landlordId": "UUID",
+      "assignedToId": "UUID | null",
+      "title": "string",
+      "description": "string",
+      "category": "plumbing" | "electrical" | "hvac" | "appliance" | "structural" | "pest" | "other",
+      "priority": "low" | "medium" | "high" | "urgent",
+      "status": "pending" | "in_progress" | "scheduled" | "completed" | "cancelled",
+      "images": ["string"],
+      "scheduledDate": "ISO 8601 datetime | null",
+      "completedDate": "ISO 8601 datetime | null",
+      "estimatedCost": "number | null",
+      "actualCost": "number | null",
+      "notes": "string | null",
+      "resolutionNotes": "string | null",
+      "permissionToEnter": "boolean",
+      "assignedTo": {
+        "id": "UUID",
+        "name": "string",
+        "avatarUrl": "string | null",
+        "avatarBg": "string"
+      } | null,
+      "createdAt": "ISO 8601 datetime",
+      "updatedAt": "ISO 8601 datetime"
+    }
+  ],
+  "timestamp": "2024-12-15T10:30:00Z"
+}
+```
+
+### Create Maintenance Request
+```json
+{
+  "success": true,
+  "data": {
+    "id": "UUID",
+    "title": "string",
+    "description": "string",
+    "category": "string",
+    "priority": "string",
+    "status": "pending",
+    "permissionToEnter": "boolean",
+    "createdAt": "ISO 8601 datetime"
+  },
+  "message": "Maintenance request submitted successfully",
+  "timestamp": "2024-12-15T10:30:00Z"
+}
+```
+
+**Notes:**
+- Maintenance requests should be filterable by status, priority, and category
+- Support search by title and description
+- Assigned worker information should be included when available
+- Images array contains URLs to uploaded photos of the issue
+- `permissionToEnter` indicates if tenant allows entry when not home
+
+---
+
+### Payment Balance Response
+```json
+{
+  "success": true,
+  "data": {
+    "amount": 1250.00,
+    "dueDate": "2025-01-01T00:00:00Z",
+    "lateFee": 0,
+    "status": "pending",
+    "tenantId": "UUID",
+    "propertyId": "UUID",
+    "leaseId": "UUID"
+  },
+  "timestamp": "2024-12-15T10:30:00Z"
+}
+```
+
+### Payment History Response
+```json
+{
+  "success": true,
+  "data": {
+    "payments": [
+      {
+        "id": "UUID",
+        "tenantId": "UUID",
+        "propertyId": "UUID",
+        "leaseId": "UUID",
+        "amount": 1250.00,
+        "lateFee": 0,
+        "totalAmount": 1250.00,
+        "dueDate": "2024-12-01T00:00:00Z",
+        "paidDate": "2024-11-28T14:30:00Z",
+        "status": "paid",
+        "paymentMethod": "credit_card",
+        "transactionId": "TXN-20241128-001",
+        "receiptUrl": "https://storage.example.com/receipts/txn-20241128-001.pdf",
+        "notes": "string | null",
+        "createdAt": "2024-11-28T14:30:00Z",
+        "updatedAt": "2024-11-28T14:30:00Z"
+      }
+    ],
+    "stats": {
+      "totalPaid": 15000.00,
+      "onTimePayments": 12,
+      "latePayments": 0,
+      "averagePaymentDay": 28,
+      "nextDueDate": "2025-01-01T00:00:00Z",
+      "nextDueAmount": 1250.00
+    },
+    "pagination": {
+      "page": 1,
+      "limit": 12,
+      "totalPages": 1,
+      "totalItems": 4
+    }
+  },
+  "timestamp": "2024-12-15T10:30:00Z"
+}
+```
+
+### Process Payment Request
+```json
+POST /api/payments
+{
+  "amount": 1250.00,
+  "paymentMethod": "credit_card",
+  "paymentDetails": {
+    "cardNumber": "4242424242424242",
+    "cardName": "John Doe",
+    "expiryDate": "12/25",
+    "cvv": "123"
+  },
+  "leaseId": "UUID",
+  "notes": "string | null"
+}
+```
+
+### Process Payment Response
+```json
+{
+  "success": true,
+  "data": {
+    "id": "UUID",
+    "transactionId": "TXN-20241215-001",
+    "amount": 1250.00,
+    "status": "completed",
+    "paymentMethod": "credit_card",
+    "receiptUrl": "https://storage.example.com/receipts/txn-20241215-001.pdf",
+    "paidDate": "2024-12-15T10:30:00Z"
+  },
+  "message": "Payment processed successfully",
+  "timestamp": "2024-12-15T10:30:00Z"
+}
+```
+
+### Payment Receipt Response
+```
+GET /api/payments/:id/receipt
+Response: PDF file (Content-Type: application/pdf)
+```
+
+**Notes:**
+- Payment status can be: `pending`, `paid`, `overdue`, `partial`, `failed`, `refunded`
+- Payment methods: `credit_card`, `debit_card`, `bank_transfer`, `ach`, `mobile_payment`, `cash`, `check`
+- Transaction IDs should be unique and generated server-side
+- Receipt generation should happen asynchronously
+- Late fees should be calculated based on landlord's late fee policy
+- Support filtering by date range, status, and payment method
+- Payment security: card details should never be stored; use payment gateway tokenization
+- Failed payments should trigger notification to tenant
+- Successful payments should update lease balance and trigger receipt generation
+
 ---
 
 ## Implementation Notes
@@ -1094,8 +1344,13 @@ CREATE TABLE properties (
 
 ---
 
-**Document Version:** 1.0  
-**Last Updated:** November 9, 2025  
+**Document Version:** 1.3  
+**Last Updated:** November 10, 2025  
 **Maintainer:** Backend Development Team  
 **Database:** PostgreSQL 14+
+
+**Changelog:**
+- v1.3 (Nov 10, 2025): Added Payments API response patterns including current balance, payment history with statistics and pagination, payment processing, and receipt generation. Documented payment security requirements, status types, and payment methods
+- v1.2 (Nov 10, 2025): Added Maintenance Requests API response patterns including list view, create request, filtering, and search capabilities. Documented assignedTo relationship and permissionToEnter field
+- v1.1 (Nov 10, 2025): Added Tenant Dashboard API response pattern with aggregated data from multiple models to support enhanced UI tooltips and metric cards
 

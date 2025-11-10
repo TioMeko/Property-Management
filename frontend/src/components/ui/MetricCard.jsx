@@ -1,4 +1,4 @@
-import { Box, Flex, Text, Icon, HStack, VStack } from "@chakra-ui/react";
+import { Box, Flex, Text, Icon, HStack, VStack, Tooltip } from "@chakra-ui/react";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import React from "react";
 
@@ -12,6 +12,7 @@ const MetricCard = ({
   trendValue,
   bgGradient,
   onClick,
+  tooltipLabel,
 }) => {
   const showTrend = trend && trendValue;
 
@@ -69,17 +70,39 @@ const MetricCard = ({
             )}
           </VStack>
           {icon && (
-            <Flex
-              align="center"
-              justify="center"
-              w={12}
-              h={12}
-              borderRadius="xl"
-              bg={`${iconColor.split(".")[0]}.100`}
-              _dark={{ bg: `${iconColor.split(".")[0]}.900` }}
+            <Tooltip 
+              label={tooltipLabel} 
+              hasArrow 
+              placement="top"
+              isDisabled={!tooltipLabel}
+              bg="gray.700"
+              color="white"
+              fontSize="sm"
+              px={3}
+              py={2}
+              borderRadius="md"
+              _dark={{
+                bg: "gray.600",
+              }}
             >
-              <Icon as={icon} boxSize={6} color={iconColor} />
-            </Flex>
+              <Flex
+                align="center"
+                justify="center"
+                w={12}
+                h={12}
+                borderRadius="xl"
+                bg={`${iconColor.split(".")[0]}.100`}
+                _dark={{ bg: `${iconColor.split(".")[0]}.900` }}
+                cursor={tooltipLabel ? "help" : "default"}
+                transition="all 0.2s"
+                _hover={tooltipLabel ? {
+                  transform: "scale(1.05)",
+                  shadow: "md",
+                } : {}}
+              >
+                <Icon as={icon} boxSize={6} color={iconColor} />
+              </Flex>
+            </Tooltip>
           )}
         </Flex>
 
