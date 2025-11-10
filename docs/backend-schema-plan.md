@@ -1,11 +1,11 @@
 # Backend Data Schema Plan
 
-This document outlines the database models, relationships, and schema design needed to support the Property Management application frontend. This schema is derived from the frontend data requirements and follows database normalization principles.
+This document outlines the database models, relationships, and schema design needed to support the Property Management application frontend using MongoDB. This schema is derived from the frontend data requirements and follows MongoDB best practices for document design and embedded vs referenced data.
 
 ## Table of Contents
 1. [Entity Relationship Overview](#entity-relationship-overview)
-2. [Core Models](#core-models)
-3. [Junction Tables](#junction-tables)
+2. [Core Collections](#core-collections)
+3. [Embedded vs Referenced Data](#embedded-vs-referenced-data)
 4. [Enums and Constants](#enums-and-constants)
 5. [Database Indexes](#database-indexes)
 6. [API Response Patterns](#api-response-patterns)
@@ -52,42 +52,42 @@ This document outlines the database models, relationships, and schema design nee
 
 ---
 
-## Core Models
+## Core Collections
 
-### 1. User Model
+### 1. User Collection
 
-**Table Name:** `users`
+**Collection Name:** `users`
 
 **Description:** Core user authentication and profile data for all user types.
 
 **Schema:**
 ```typescript
 {
-  id: UUID (PRIMARY KEY),
-  email: VARCHAR(255) UNIQUE NOT NULL,
-  passwordHash: VARCHAR(255) NOT NULL,
-  role: ENUM('landlord', 'tenant', 'admin') NOT NULL,
-  firstName: VARCHAR(100) NOT NULL,
-  lastName: VARCHAR(100) NOT NULL,
-  phone: VARCHAR(20),
-  address: VARCHAR(255),
-  city: VARCHAR(100),
-  state: VARCHAR(50),
-  zipCode: VARCHAR(10),
-  avatarUrl: VARCHAR(500),
-  isEmailVerified: BOOLEAN DEFAULT false,
-  isActive: BOOLEAN DEFAULT true,
-  lastLoginAt: TIMESTAMP,
-  createdAt: TIMESTAMP DEFAULT NOW(),
-  updatedAt: TIMESTAMP DEFAULT NOW()
+  _id: ObjectId,
+  email: String (unique, required),
+  passwordHash: String (required),
+  role: String (enum: ['landlord', 'tenant', 'admin'], required),
+  firstName: String (required),
+  lastName: String (required),
+  phone: String,
+  address: String,
+  city: String,
+  state: String,
+  zipCode: String,
+  avatarUrl: String,
+  isEmailVerified: Boolean (default: false),
+  isActive: Boolean (default: true),
+  lastLoginAt: Date,
+  createdAt: Date (default: Date.now),
+  updatedAt: Date (default: Date.now)
 }
 ```
 
 **Indexes:**
-- PRIMARY KEY on `id`
-- UNIQUE INDEX on `email`
-- INDEX on `role`
-- INDEX on `isActive`
+- Unique index on `email`
+- Index on `role`
+- Index on `isActive`
+- Index on `createdAt`
 
 **Relationships:**
 - Has many: Properties (if landlord)
@@ -98,42 +98,42 @@ This document outlines the database models, relationships, and schema design nee
 
 ---
 
-### 2. Property Model
+### 2. Property Collection
 
-**Table Name:** `properties`
+**Collection Name:** `properties`
 
 **Description:** Represents rental properties owned by landlords.
 
 **Schema:**
 ```typescript
 {
-  id: UUID (PRIMARY KEY),
-  landlordId: UUID (FOREIGN KEY -> users.id) NOT NULL,
-  name: VARCHAR(255) NOT NULL,
-  address: VARCHAR(255) NOT NULL,
-  city: VARCHAR(100) NOT NULL,
-  state: VARCHAR(50) NOT NULL,
-  zipCode: VARCHAR(10) NOT NULL,
-  country: VARCHAR(50) DEFAULT 'USA',
-  propertyType: ENUM('apartment', 'house', 'condo', 'townhouse', 'commercial') NOT NULL,
-  totalUnits: INTEGER NOT NULL DEFAULT 1,
-  occupiedUnits: INTEGER NOT NULL DEFAULT 0,
-  yearBuilt: INTEGER,
-  squareFeet: INTEGER,
-  description: TEXT,
-  amenities: TEXT[], // PostgreSQL array or JSON
-  images: TEXT[], // Array of image URLs
-  status: ENUM('active', 'inactive', 'maintenance') DEFAULT 'active',
-  createdAt: TIMESTAMP DEFAULT NOW(),
-  updatedAt: TIMESTAMP DEFAULT NOW()
+  _id: ObjectId,
+  landlordId: ObjectId (ref: 'User', required),
+  name: String (required),
+  address: String (required),
+  city: String (required),
+  state: String (required),
+  zipCode: String (required),
+  country: String (default: 'USA'),
+  propertyType: String (enum: ['apartment', 'house', 'condo', 'townhouse', 'commercial'], required),
+  totalUnits: Number (required, default: 1),
+  occupiedUnits: Number (required, default: 0),
+  yearBuilt: Number,
+  squareFeet: Number,
+  description: String,
+  amenities: [String],
+  images: [String],
+  status: String (enum: ['active', 'inactive', 'maintenance'], default: 'active'),
+  createdAt: Date (default: Date.now),
+  updatedAt: Date (default: Date.now)
 }
 ```
 
 **Indexes:**
-- PRIMARY KEY on `id`
-- INDEX on `landlordId`
-- INDEX on `status`
-- INDEX on `city, state` (composite for location searches)
+- Index on `landlordId`
+- Index on `status`
+- Compound index on `city, state` (for location searches)
+- Text index on `name, address, city` (for search)
 
 **Relationships:**
 - Belongs to: User (landlord)
@@ -147,38 +147,37 @@ This document outlines the database models, relationships, and schema design nee
 
 ---
 
-### 3. Unit Model
+### 3. Unit Collection
 
-**Table Name:** `units`
+**Collection Name:** `units`
 
 **Description:** Individual units within a property (for multi-unit properties).
 
 **Schema:**
 ```typescript
 {
-  id: UUID (PRIMARY KEY),
-  propertyId: UUID (FOREIGN KEY -> properties.id) NOT NULL,
-  unitNumber: VARCHAR(50) NOT NULL,
-  floor: INTEGER,
-  bedrooms: INTEGER NOT NULL,
-  bathrooms: DECIMAL(3,1) NOT NULL,
-  squareFeet: INTEGER,
-  monthlyRent: DECIMAL(10,2) NOT NULL,
-  securityDeposit: DECIMAL(10,2),
-  status: ENUM('available', 'occupied', 'maintenance', 'reserved') DEFAULT 'available',
-  description: TEXT,
-  features: TEXT[], // Array of features
-  images: TEXT[], // Array of image URLs
-  createdAt: TIMESTAMP DEFAULT NOW(),
-  updatedAt: TIMESTAMP DEFAULT NOW()
+  _id: ObjectId,
+  propertyId: ObjectId (ref: 'Property', required),
+  unitNumber: String (required),
+  floor: Number,
+  bedrooms: Number (required),
+  bathrooms: Number (required),
+  squareFeet: Number,
+  monthlyRent: Number (required),
+  securityDeposit: Number,
+  status: String (enum: ['available', 'occupied', 'maintenance', 'reserved'], default: 'available'),
+  description: String,
+  features: [String],
+  images: [String],
+  createdAt: Date (default: Date.now),
+  updatedAt: Date (default: Date.now)
 }
 ```
 
 **Indexes:**
-- PRIMARY KEY on `id`
-- INDEX on `propertyId`
-- INDEX on `status`
-- UNIQUE INDEX on `propertyId, unitNumber`
+- Index on `propertyId`
+- Index on `status`
+- Compound unique index on `propertyId, unitNumber`
 
 **Relationships:**
 - Belongs to: Property
@@ -187,47 +186,47 @@ This document outlines the database models, relationships, and schema design nee
 
 ---
 
-### 4. Lease Model
+### 4. Lease Collection
 
-**Table Name:** `leases`
+**Collection Name:** `leases`
 
 **Description:** Lease agreements between landlords and tenants.
 
 **Schema:**
 ```typescript
 {
-  id: UUID (PRIMARY KEY),
-  propertyId: UUID (FOREIGN KEY -> properties.id) NOT NULL,
-  unitId: UUID (FOREIGN KEY -> units.id),
-  tenantId: UUID (FOREIGN KEY -> users.id) NOT NULL,
-  landlordId: UUID (FOREIGN KEY -> users.id) NOT NULL,
-  leaseStartDate: DATE NOT NULL,
-  leaseEndDate: DATE NOT NULL,
-  monthlyRent: DECIMAL(10,2) NOT NULL,
-  securityDeposit: DECIMAL(10,2) NOT NULL,
-  securityDepositPaid: BOOLEAN DEFAULT false,
-  paymentDueDay: INTEGER NOT NULL DEFAULT 1, // Day of month (1-31)
-  status: ENUM('draft', 'active', 'expiring_soon', 'expired', 'terminated', 'renewed') DEFAULT 'draft',
-  leaseType: ENUM('fixed', 'month_to_month') DEFAULT 'fixed',
-  terms: TEXT, // Lease terms and conditions
-  documentUrl: VARCHAR(500), // PDF of signed lease
-  notes: TEXT,
-  terminationDate: DATE,
-  terminationReason: TEXT,
-  renewedToLeaseId: UUID (FOREIGN KEY -> leases.id), // If renewed
-  createdAt: TIMESTAMP DEFAULT NOW(),
-  updatedAt: TIMESTAMP DEFAULT NOW()
+  _id: ObjectId,
+  propertyId: ObjectId (ref: 'Property', required),
+  unitId: ObjectId (ref: 'Unit'),
+  tenantId: ObjectId (ref: 'User', required),
+  landlordId: ObjectId (ref: 'User', required),
+  leaseStartDate: Date (required),
+  leaseEndDate: Date (required),
+  monthlyRent: Number (required),
+  securityDeposit: Number (required),
+  securityDepositPaid: Boolean (default: false),
+  paymentDueDay: Number (required, default: 1), // Day of month (1-31)
+  status: String (enum: ['draft', 'active', 'expiring_soon', 'expired', 'terminated', 'renewed'], default: 'draft'),
+  leaseType: String (enum: ['fixed', 'month_to_month'], default: 'fixed'),
+  terms: String,
+  documentUrl: String,
+  notes: String,
+  terminationDate: Date,
+  terminationReason: String,
+  renewedToLeaseId: ObjectId (ref: 'Lease'),
+  createdAt: Date (default: Date.now),
+  updatedAt: Date (default: Date.now)
 }
 ```
 
 **Indexes:**
-- PRIMARY KEY on `id`
-- INDEX on `tenantId`
-- INDEX on `landlordId`
-- INDEX on `propertyId`
-- INDEX on `unitId`
-- INDEX on `status`
-- INDEX on `leaseEndDate` (for expiration notifications)
+- Index on `tenantId`
+- Index on `landlordId`
+- Index on `propertyId`
+- Index on `unitId`
+- Index on `status`
+- Index on `leaseEndDate` (for expiration notifications)
+- Compound index on `tenantId, status`
 
 **Relationships:**
 - Belongs to: User (tenant)
@@ -243,44 +242,45 @@ This document outlines the database models, relationships, and schema design nee
 
 ---
 
-### 5. Payment Model
+### 5. Payment Collection
 
-**Table Name:** `payments`
+**Collection Name:** `payments`
 
 **Description:** Rent and other payments made by tenants.
 
 **Schema:**
 ```typescript
 {
-  id: UUID (PRIMARY KEY),
-  leaseId: UUID (FOREIGN KEY -> leases.id) NOT NULL,
-  tenantId: UUID (FOREIGN KEY -> users.id) NOT NULL,
-  landlordId: UUID (FOREIGN KEY -> users.id) NOT NULL,
-  amount: DECIMAL(10,2) NOT NULL,
-  dueDate: DATE NOT NULL,
-  paidDate: TIMESTAMP,
-  status: ENUM('pending', 'paid', 'partial', 'overdue', 'failed', 'refunded') DEFAULT 'pending',
-  paymentType: ENUM('rent', 'security_deposit', 'late_fee', 'utility', 'other') DEFAULT 'rent',
-  paymentMethod: VARCHAR(50), // 'credit_card', 'bank_transfer', 'check', 'cash'
-  transactionId: VARCHAR(255) UNIQUE,
-  stripePaymentIntentId: VARCHAR(255), // If using Stripe
-  amountPaid: DECIMAL(10,2) DEFAULT 0,
-  lateFee: DECIMAL(10,2) DEFAULT 0,
-  notes: TEXT,
-  receiptUrl: VARCHAR(500),
-  createdAt: TIMESTAMP DEFAULT NOW(),
-  updatedAt: TIMESTAMP DEFAULT NOW()
+  _id: ObjectId,
+  leaseId: ObjectId (ref: 'Lease', required),
+  tenantId: ObjectId (ref: 'User', required),
+  landlordId: ObjectId (ref: 'User', required),
+  amount: Number (required),
+  dueDate: Date (required),
+  paidDate: Date,
+  status: String (enum: ['pending', 'paid', 'partial', 'overdue', 'failed', 'refunded'], default: 'pending'),
+  paymentType: String (enum: ['rent', 'security_deposit', 'late_fee', 'utility', 'other'], default: 'rent'),
+  paymentMethod: String,
+  transactionId: String (unique),
+  stripePaymentIntentId: String,
+  amountPaid: Number (default: 0),
+  lateFee: Number (default: 0),
+  notes: String,
+  receiptUrl: String,
+  createdAt: Date (default: Date.now),
+  updatedAt: Date (default: Date.now)
 }
 ```
 
 **Indexes:**
-- PRIMARY KEY on `id`
-- INDEX on `leaseId`
-- INDEX on `tenantId`
-- INDEX on `landlordId`
-- INDEX on `status`
-- INDEX on `dueDate`
-- UNIQUE INDEX on `transactionId`
+- Index on `leaseId`
+- Index on `tenantId`
+- Index on `landlordId`
+- Index on `status`
+- Index on `dueDate`
+- Unique index on `transactionId`
+- Compound index on `tenantId, status`
+- Compound index on `tenantId, dueDate`
 
 **Relationships:**
 - Belongs to: Lease
@@ -294,49 +294,50 @@ This document outlines the database models, relationships, and schema design nee
 
 ---
 
-### 6. MaintenanceRequest Model
+### 6. MaintenanceRequest Collection
 
-**Table Name:** `maintenance_requests`
+**Collection Name:** `maintenance_requests`
 
 **Description:** Maintenance and repair requests for properties.
 
 **Schema:**
 ```typescript
 {
-  id: UUID (PRIMARY KEY),
-  propertyId: UUID (FOREIGN KEY -> properties.id) NOT NULL,
-  unitId: UUID (FOREIGN KEY -> units.id),
-  tenantId: UUID (FOREIGN KEY -> users.id) NOT NULL,
-  landlordId: UUID (FOREIGN KEY -> users.id) NOT NULL,
-  assignedToId: UUID (FOREIGN KEY -> users.id), // Maintenance worker
-  title: VARCHAR(255) NOT NULL,
-  description: TEXT NOT NULL,
-  category: ENUM('plumbing', 'electrical', 'hvac', 'appliance', 'structural', 'pest', 'other') NOT NULL,
-  priority: ENUM('low', 'medium', 'high', 'urgent') DEFAULT 'medium',
-  status: ENUM('pending', 'in_progress', 'scheduled', 'completed', 'cancelled') DEFAULT 'pending',
-  images: TEXT[], // Array of image URLs
-  scheduledDate: TIMESTAMP,
-  completedDate: TIMESTAMP,
-  estimatedCost: DECIMAL(10,2),
-  actualCost: DECIMAL(10,2),
-  notes: TEXT,
-  resolutionNotes: TEXT,
-  permissionToEnter: BOOLEAN DEFAULT false,
-  createdAt: TIMESTAMP DEFAULT NOW(),
-  updatedAt: TIMESTAMP DEFAULT NOW()
+  _id: ObjectId,
+  propertyId: ObjectId (ref: 'Property', required),
+  unitId: ObjectId (ref: 'Unit'),
+  tenantId: ObjectId (ref: 'User', required),
+  landlordId: ObjectId (ref: 'User', required),
+  assignedToId: ObjectId (ref: 'User'),
+  title: String (required),
+  description: String (required),
+  category: String (enum: ['plumbing', 'electrical', 'hvac', 'appliance', 'structural', 'pest', 'other'], required),
+  priority: String (enum: ['low', 'medium', 'high', 'urgent'], default: 'medium'),
+  status: String (enum: ['pending', 'in_progress', 'scheduled', 'completed', 'cancelled'], default: 'pending'),
+  images: [String],
+  scheduledDate: Date,
+  completedDate: Date,
+  estimatedCost: Number,
+  actualCost: Number,
+  notes: String,
+  resolutionNotes: String,
+  permissionToEnter: Boolean (default: false),
+  createdAt: Date (default: Date.now),
+  updatedAt: Date (default: Date.now)
 }
 ```
 
 **Indexes:**
-- PRIMARY KEY on `id`
-- INDEX on `propertyId`
-- INDEX on `unitId`
-- INDEX on `tenantId`
-- INDEX on `landlordId`
-- INDEX on `assignedToId`
-- INDEX on `status`
-- INDEX on `priority`
-- INDEX on `createdAt` (for sorting)
+- Index on `propertyId`
+- Index on `unitId`
+- Index on `tenantId`
+- Index on `landlordId`
+- Index on `assignedToId`
+- Index on `status`
+- Index on `priority`
+- Index on `createdAt` (for sorting)
+- Compound index on `landlordId, status`
+- Text index on `title, description` (for search)
 
 **Relationships:**
 - Belongs to: Property
@@ -348,31 +349,31 @@ This document outlines the database models, relationships, and schema design nee
 
 ---
 
-### 7. MaintenanceUpdate Model
+### 7. MaintenanceUpdate Collection
 
-**Table Name:** `maintenance_updates`
+**Collection Name:** `maintenance_updates`
 
 **Description:** Status updates and comments on maintenance requests.
 
 **Schema:**
 ```typescript
 {
-  id: UUID (PRIMARY KEY),
-  requestId: UUID (FOREIGN KEY -> maintenance_requests.id) NOT NULL,
-  userId: UUID (FOREIGN KEY -> users.id) NOT NULL,
-  updateType: ENUM('status_change', 'comment', 'cost_update', 'scheduled') NOT NULL,
-  previousStatus: VARCHAR(50),
-  newStatus: VARCHAR(50),
-  comment: TEXT,
-  images: TEXT[],
-  createdAt: TIMESTAMP DEFAULT NOW()
+  _id: ObjectId,
+  requestId: ObjectId (ref: 'MaintenanceRequest', required),
+  userId: ObjectId (ref: 'User', required),
+  updateType: String (enum: ['status_change', 'comment', 'cost_update', 'scheduled'], required),
+  previousStatus: String,
+  newStatus: String,
+  comment: String,
+  images: [String],
+  createdAt: Date (default: Date.now)
 }
 ```
 
 **Indexes:**
-- PRIMARY KEY on `id`
-- INDEX on `requestId`
-- INDEX on `userId`
+- Index on `requestId`
+- Index on `userId`
+- Index on `createdAt`
 
 **Relationships:**
 - Belongs to: MaintenanceRequest
@@ -380,39 +381,39 @@ This document outlines the database models, relationships, and schema design nee
 
 ---
 
-### 8. Message Model
+### 8. Message Collection
 
-**Table Name:** `messages`
+**Collection Name:** `messages`
 
 **Description:** Direct messages between users (landlords and tenants).
 
 **Schema:**
 ```typescript
 {
-  id: UUID (PRIMARY KEY),
-  senderId: UUID (FOREIGN KEY -> users.id) NOT NULL,
-  receiverId: UUID (FOREIGN KEY -> users.id) NOT NULL,
-  propertyId: UUID (FOREIGN KEY -> properties.id), // Optional context
-  leaseId: UUID (FOREIGN KEY -> leases.id), // Optional context
-  subject: VARCHAR(255),
-  content: TEXT NOT NULL,
-  isRead: BOOLEAN DEFAULT false,
-  readAt: TIMESTAMP,
-  parentMessageId: UUID (FOREIGN KEY -> messages.id), // For threading
-  attachments: TEXT[], // Array of attachment URLs
-  createdAt: TIMESTAMP DEFAULT NOW(),
-  updatedAt: TIMESTAMP DEFAULT NOW()
+  _id: ObjectId,
+  senderId: ObjectId (ref: 'User', required),
+  receiverId: ObjectId (ref: 'User', required),
+  propertyId: ObjectId (ref: 'Property'),
+  leaseId: ObjectId (ref: 'Lease'),
+  subject: String,
+  content: String (required),
+  isRead: Boolean (default: false),
+  readAt: Date,
+  parentMessageId: ObjectId (ref: 'Message'),
+  attachments: [String],
+  createdAt: Date (default: Date.now),
+  updatedAt: Date (default: Date.now)
 }
 ```
 
 **Indexes:**
-- PRIMARY KEY on `id`
-- INDEX on `senderId`
-- INDEX on `receiverId`
-- INDEX on `propertyId`
-- INDEX on `leaseId`
-- INDEX on `isRead`
-- INDEX on `createdAt`
+- Index on `senderId`
+- Index on `receiverId`
+- Index on `propertyId`
+- Index on `leaseId`
+- Compound index on `receiverId, isRead`
+- Index on `createdAt`
+- Text index on `subject, content` (for search)
 
 **Relationships:**
 - Belongs to: User (sender)
@@ -423,76 +424,76 @@ This document outlines the database models, relationships, and schema design nee
 
 ---
 
-### 9. Notification Model
+### 9. Notification Collection
 
-**Table Name:** `notifications`
+**Collection Name:** `notifications`
 
 **Description:** System notifications for users.
 
 **Schema:**
 ```typescript
 {
-  id: UUID (PRIMARY KEY),
-  userId: UUID (FOREIGN KEY -> users.id) NOT NULL,
-  type: ENUM('payment', 'maintenance', 'message', 'lease', 'system', 'reminder') NOT NULL,
-  title: VARCHAR(255) NOT NULL,
-  content: TEXT NOT NULL,
-  relatedEntityType: VARCHAR(50), // 'payment', 'maintenance_request', 'lease', etc.
-  relatedEntityId: UUID,
-  actionUrl: VARCHAR(500), // Deep link to relevant page
-  isRead: BOOLEAN DEFAULT false,
-  readAt: TIMESTAMP,
-  priority: ENUM('low', 'medium', 'high') DEFAULT 'medium',
-  expiresAt: TIMESTAMP, // Optional expiration
-  createdAt: TIMESTAMP DEFAULT NOW()
+  _id: ObjectId,
+  userId: ObjectId (ref: 'User', required),
+  type: String (enum: ['payment', 'maintenance', 'message', 'lease', 'system', 'reminder'], required),
+  title: String (required),
+  content: String (required),
+  relatedEntityType: String,
+  relatedEntityId: ObjectId,
+  actionUrl: String,
+  isRead: Boolean (default: false),
+  readAt: Date,
+  priority: String (enum: ['low', 'medium', 'high'], default: 'medium'),
+  expiresAt: Date,
+  createdAt: Date (default: Date.now)
 }
 ```
 
 **Indexes:**
-- PRIMARY KEY on `id`
-- INDEX on `userId`
-- INDEX on `type`
-- INDEX on `isRead`
-- INDEX on `createdAt`
+- Index on `userId`
+- Index on `type`
+- Compound index on `userId, isRead`
+- Index on `createdAt`
+- Index on `expiresAt` (for cleanup)
 
 **Relationships:**
 - Belongs to: User
 
 ---
 
-### 10. Document Model
+### 10. Document Collection
 
-**Table Name:** `documents`
+**Collection Name:** `documents`
 
 **Description:** Store documents like leases, receipts, reports.
 
 **Schema:**
 ```typescript
 {
-  id: UUID (PRIMARY KEY),
-  userId: UUID (FOREIGN KEY -> users.id) NOT NULL,
-  propertyId: UUID (FOREIGN KEY -> properties.id),
-  leaseId: UUID (FOREIGN KEY -> leases.id),
-  documentType: ENUM('lease', 'receipt', 'report', 'identification', 'other') NOT NULL,
-  title: VARCHAR(255) NOT NULL,
-  description: TEXT,
-  fileUrl: VARCHAR(500) NOT NULL,
-  fileType: VARCHAR(50), // 'pdf', 'jpg', 'png', 'docx'
-  fileSize: INTEGER, // In bytes
-  uploadedBy: UUID (FOREIGN KEY -> users.id) NOT NULL,
-  isPublic: BOOLEAN DEFAULT false,
-  createdAt: TIMESTAMP DEFAULT NOW(),
-  updatedAt: TIMESTAMP DEFAULT NOW()
+  _id: ObjectId,
+  userId: ObjectId (ref: 'User', required),
+  propertyId: ObjectId (ref: 'Property'),
+  leaseId: ObjectId (ref: 'Lease'),
+  documentType: String (enum: ['lease', 'receipt', 'report', 'identification', 'other'], required),
+  title: String (required),
+  description: String,
+  fileUrl: String (required),
+  fileType: String,
+  fileSize: Number,
+  uploadedBy: ObjectId (ref: 'User', required),
+  isPublic: Boolean (default: false),
+  createdAt: Date (default: Date.now),
+  updatedAt: Date (default: Date.now)
 }
 ```
 
 **Indexes:**
-- PRIMARY KEY on `id`
-- INDEX on `userId`
-- INDEX on `propertyId`
-- INDEX on `leaseId`
-- INDEX on `documentType`
-- INDEX on `uploadedBy`
+- Index on `userId`
+- Index on `propertyId`
+- Index on `leaseId`
+- Index on `documentType`
+- Index on `uploadedBy`
+- Compound index on `userId, documentType`
 
 **Relationships:**
 - Belongs to: User (owner)
@@ -502,104 +503,174 @@ This document outlines the database models, relationships, and schema design nee
 
 ---
 
-### 11. UserSettings Model
+### 11. UserSettings Collection
 
-**Table Name:** `user_settings`
+**Collection Name:** `user_settings`
 
-**Description:** User preferences and settings.
+**Description:** User preferences and settings (embedded in User document or separate collection).
 
 **Schema:**
 ```typescript
 {
-  id: UUID (PRIMARY KEY),
-  userId: UUID (FOREIGN KEY -> users.id) UNIQUE NOT NULL,
+  _id: ObjectId,
+  userId: ObjectId (ref: 'User', unique, required),
   // Notification Preferences
-  emailNotifications: BOOLEAN DEFAULT true,
-  smsNotifications: BOOLEAN DEFAULT false,
-  paymentReminders: BOOLEAN DEFAULT true,
-  maintenanceUpdates: BOOLEAN DEFAULT true,
-  messageNotifications: BOOLEAN DEFAULT true,
-  leaseExpirationReminders: BOOLEAN DEFAULT true,
+  emailNotifications: Boolean (default: true),
+  smsNotifications: Boolean (default: false),
+  paymentReminders: Boolean (default: true),
+  maintenanceUpdates: Boolean (default: true),
+  messageNotifications: Boolean (default: true),
+  leaseExpirationReminders: Boolean (default: true),
   // Display Preferences
-  darkMode: BOOLEAN DEFAULT false,
-  language: VARCHAR(10) DEFAULT 'en',
-  timezone: VARCHAR(50) DEFAULT 'UTC',
-  dateFormat: VARCHAR(20) DEFAULT 'MM/DD/YYYY',
+  darkMode: Boolean (default: false),
+  language: String (default: 'en'),
+  timezone: String (default: 'UTC'),
+  dateFormat: String (default: 'MM/DD/YYYY'),
   // Tenant-specific
-  autoPayRent: BOOLEAN DEFAULT false,
-  autoPayDay: INTEGER, // Day before due date to auto-pay
+  autoPayRent: Boolean (default: false),
+  autoPayDay: Number,
   // Landlord-specific
-  defaultPaymentDueDay: INTEGER DEFAULT 1,
-  requireDepositOnBooking: BOOLEAN DEFAULT true,
+  defaultPaymentDueDay: Number (default: 1),
+  requireDepositOnBooking: Boolean (default: true),
   // General
-  twoFactorEnabled: BOOLEAN DEFAULT false,
-  createdAt: TIMESTAMP DEFAULT NOW(),
-  updatedAt: TIMESTAMP DEFAULT NOW()
+  twoFactorEnabled: Boolean (default: false),
+  createdAt: Date (default: Date.now),
+  updatedAt: Date (default: Date.now)
 }
 ```
 
 **Indexes:**
-- PRIMARY KEY on `id`
-- UNIQUE INDEX on `userId`
+- Unique index on `userId`
+
+**Note:** Consider embedding this directly in the User document for better performance.
 
 **Relationships:**
 - Belongs to: User (one-to-one)
 
 ---
 
-### 12. Activity Log Model
+### 12. ActivityLog Collection
 
-**Table Name:** `activity_logs`
+**Collection Name:** `activity_logs`
 
 **Description:** Track user activities for audit trail and recent activity feeds.
 
 **Schema:**
 ```typescript
 {
-  id: UUID (PRIMARY KEY),
-  userId: UUID (FOREIGN KEY -> users.id) NOT NULL,
-  activityType: ENUM('login', 'payment', 'maintenance', 'message', 'lease', 'profile_update', 'property_update') NOT NULL,
-  entityType: VARCHAR(50), // 'payment', 'lease', 'property', etc.
-  entityId: UUID,
-  description: TEXT NOT NULL,
-  metadata: JSONB, // Additional data as JSON
-  ipAddress: VARCHAR(45),
-  userAgent: VARCHAR(500),
-  createdAt: TIMESTAMP DEFAULT NOW()
+  _id: ObjectId,
+  userId: ObjectId (ref: 'User', required),
+  activityType: String (enum: ['login', 'payment', 'maintenance', 'message', 'lease', 'profile_update', 'property_update'], required),
+  entityType: String,
+  entityId: ObjectId,
+  description: String (required),
+  metadata: Object,
+  ipAddress: String,
+  userAgent: String,
+  createdAt: Date (default: Date.now)
 }
 ```
 
 **Indexes:**
-- PRIMARY KEY on `id`
-- INDEX on `userId`
-- INDEX on `activityType`
-- INDEX on `createdAt`
+- Index on `userId`
+- Index on `activityType`
+- Index on `createdAt`
+- Compound index on `userId, createdAt`
+- TTL index on `createdAt` (expires after 90 days)
 
 **Relationships:**
 - Belongs to: User
 
 ---
 
-## Junction Tables
+## Embedded vs Referenced Data
 
-### PropertyTenant (for historical tracking)
+MongoDB provides flexibility in structuring data through embedding or referencing. Here's the recommended approach for this application:
 
-**Table Name:** `property_tenants`
+### Embedded Documents
+
+**When to Embed:**
+- Data is always accessed together with the parent
+- Data doesn't need to be queried independently
+- One-to-few relationships
+- Data changes infrequently
+
+**Recommended Embeddings:**
+
+1. **User Settings in User Document** (Optional)
+```typescript
+{
+  _id: ObjectId,
+  email: String,
+  // ... other user fields
+  settings: {
+    emailNotifications: Boolean,
+    darkMode: Boolean,
+    // ... other settings
+  }
+}
+```
+
+2. **Property Amenities** (Already embedded as array)
+```typescript
+amenities: ['parking', 'pool', 'gym']
+```
+
+3. **Maintenance Updates** (Consider embedding in MaintenanceRequest for small datasets)
+```typescript
+{
+  _id: ObjectId,
+  title: String,
+  // ... other fields
+  updates: [
+    {
+      userId: ObjectId,
+      comment: String,
+      createdAt: Date
+    }
+  ]
+}
+```
+
+### Referenced Documents
+
+**When to Reference:**
+- Data is accessed independently
+- Data is shared across documents
+- One-to-many or many-to-many relationships
+- Data changes frequently
+- Document size would exceed 16MB limit
+
+**All main collections use references** for relationships like:
+- Property → Landlord (userId)
+- Lease → Tenant, Landlord, Property
+- Payment → Lease, Tenant
+- Message → Sender, Receiver
+
+### PropertyTenant Collection (for historical tracking)
+
+**Collection Name:** `property_tenants`
 
 **Description:** Track tenant history at properties (many-to-many).
 
 **Schema:**
 ```typescript
 {
-  id: UUID (PRIMARY KEY),
-  propertyId: UUID (FOREIGN KEY -> properties.id) NOT NULL,
-  tenantId: UUID (FOREIGN KEY -> users.id) NOT NULL,
-  moveInDate: DATE NOT NULL,
-  moveOutDate: DATE,
-  isCurrentTenant: BOOLEAN DEFAULT true,
-  createdAt: TIMESTAMP DEFAULT NOW()
+  _id: ObjectId,
+  propertyId: ObjectId (ref: 'Property', required),
+  tenantId: ObjectId (ref: 'User', required),
+  moveInDate: Date (required),
+  moveOutDate: Date,
+  isCurrentTenant: Boolean (default: true),
+  createdAt: Date (default: Date.now)
 }
 ```
+
+**Indexes:**
+- Index on `propertyId`
+- Index on `tenantId`
+- Compound index on `propertyId, tenantId`
+- Index on `isCurrentTenant`
 
 ---
 
@@ -688,70 +759,135 @@ enum NotificationType {
 
 ### Performance Indexes
 
-```sql
--- User lookups
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_role ON users(role);
-CREATE INDEX idx_users_active ON users(isActive);
+MongoDB indexes using Mongoose schema syntax:
 
--- Property searches
-CREATE INDEX idx_properties_landlord ON properties(landlordId);
-CREATE INDEX idx_properties_location ON properties(city, state);
-CREATE INDEX idx_properties_status ON properties(status);
+```javascript
+// User Collection
+userSchema.index({ email: 1 }, { unique: true });
+userSchema.index({ role: 1 });
+userSchema.index({ isActive: 1 });
+userSchema.index({ createdAt: 1 });
 
--- Unit availability
-CREATE INDEX idx_units_property ON units(propertyId);
-CREATE INDEX idx_units_status ON units(status);
+// Property Collection
+propertySchema.index({ landlordId: 1 });
+propertySchema.index({ city: 1, state: 1 });
+propertySchema.index({ status: 1 });
+propertySchema.index({ landlordId: 1, status: 1 });
 
--- Lease queries
-CREATE INDEX idx_leases_tenant ON leases(tenantId);
-CREATE INDEX idx_leases_landlord ON leases(landlordId);
-CREATE INDEX idx_leases_property ON leases(propertyId);
-CREATE INDEX idx_leases_status ON leases(status);
-CREATE INDEX idx_leases_expiration ON leases(leaseEndDate);
+// Unit Collection
+unitSchema.index({ propertyId: 1 });
+unitSchema.index({ status: 1 });
+unitSchema.index({ propertyId: 1, unitNumber: 1 }, { unique: true });
 
--- Payment queries
-CREATE INDEX idx_payments_lease ON payments(leaseId);
-CREATE INDEX idx_payments_tenant ON payments(tenantId);
-CREATE INDEX idx_payments_status ON payments(status);
-CREATE INDEX idx_payments_due_date ON payments(dueDate);
+// Lease Collection
+leaseSchema.index({ tenantId: 1 });
+leaseSchema.index({ landlordId: 1 });
+leaseSchema.index({ propertyId: 1 });
+leaseSchema.index({ status: 1 });
+leaseSchema.index({ leaseEndDate: 1 });
+leaseSchema.index({ tenantId: 1, status: 1 });
 
--- Maintenance tracking
-CREATE INDEX idx_maintenance_property ON maintenance_requests(propertyId);
-CREATE INDEX idx_maintenance_tenant ON maintenance_requests(tenantId);
-CREATE INDEX idx_maintenance_landlord ON maintenance_requests(landlordId);
-CREATE INDEX idx_maintenance_status ON maintenance_requests(status);
-CREATE INDEX idx_maintenance_priority ON maintenance_requests(priority);
+// Payment Collection
+paymentSchema.index({ leaseId: 1 });
+paymentSchema.index({ tenantId: 1 });
+paymentSchema.index({ status: 1 });
+paymentSchema.index({ dueDate: 1 });
+paymentSchema.index({ transactionId: 1 }, { unique: true, sparse: true });
+paymentSchema.index({ tenantId: 1, status: 1 });
+paymentSchema.index({ tenantId: 1, dueDate: 1 });
 
--- Message queries
-CREATE INDEX idx_messages_sender ON messages(senderId);
-CREATE INDEX idx_messages_receiver ON messages(receiverId);
-CREATE INDEX idx_messages_unread ON messages(receiverId, isRead);
-CREATE INDEX idx_messages_created ON messages(createdAt);
+// MaintenanceRequest Collection
+maintenanceRequestSchema.index({ propertyId: 1 });
+maintenanceRequestSchema.index({ tenantId: 1 });
+maintenanceRequestSchema.index({ landlordId: 1 });
+maintenanceRequestSchema.index({ status: 1 });
+maintenanceRequestSchema.index({ priority: 1 });
+maintenanceRequestSchema.index({ createdAt: -1 });
+maintenanceRequestSchema.index({ landlordId: 1, status: 1 });
 
--- Notification queries
-CREATE INDEX idx_notifications_user ON notifications(userId);
-CREATE INDEX idx_notifications_unread ON notifications(userId, isRead);
-CREATE INDEX idx_notifications_created ON notifications(createdAt);
+// MaintenanceUpdate Collection
+maintenanceUpdateSchema.index({ requestId: 1 });
+maintenanceUpdateSchema.index({ userId: 1 });
+maintenanceUpdateSchema.index({ createdAt: -1 });
 
--- Activity logs
-CREATE INDEX idx_activity_user ON activity_logs(userId);
-CREATE INDEX idx_activity_type ON activity_logs(activityType);
-CREATE INDEX idx_activity_created ON activity_logs(createdAt);
+// Message Collection
+messageSchema.index({ senderId: 1 });
+messageSchema.index({ receiverId: 1 });
+messageSchema.index({ receiverId: 1, isRead: 1 });
+messageSchema.index({ createdAt: -1 });
+
+// Notification Collection
+notificationSchema.index({ userId: 1 });
+notificationSchema.index({ userId: 1, isRead: 1 });
+notificationSchema.index({ createdAt: -1 });
+notificationSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 }); // TTL index
+
+// Document Collection
+documentSchema.index({ userId: 1 });
+documentSchema.index({ propertyId: 1 });
+documentSchema.index({ leaseId: 1 });
+documentSchema.index({ documentType: 1 });
+documentSchema.index({ userId: 1, documentType: 1 });
+
+// ActivityLog Collection
+activityLogSchema.index({ userId: 1 });
+activityLogSchema.index({ activityType: 1 });
+activityLogSchema.index({ createdAt: -1 });
+activityLogSchema.index({ userId: 1, createdAt: -1 });
+activityLogSchema.index({ createdAt: 1 }, { expireAfterSeconds: 7776000 }); // TTL: 90 days
+
+// PropertyTenant Collection
+propertyTenantSchema.index({ propertyId: 1 });
+propertyTenantSchema.index({ tenantId: 1 });
+propertyTenantSchema.index({ propertyId: 1, tenantId: 1 });
+propertyTenantSchema.index({ isCurrentTenant: 1 });
 ```
 
-### Full-Text Search Indexes
+### Text Search Indexes
 
-```sql
--- PostgreSQL full-text search
-CREATE INDEX idx_properties_search ON properties 
-  USING gin(to_tsvector('english', name || ' ' || address || ' ' || city));
+MongoDB text indexes for full-text search:
 
-CREATE INDEX idx_maintenance_search ON maintenance_requests 
-  USING gin(to_tsvector('english', title || ' ' || description));
+```javascript
+// Property Collection - Text Search
+propertySchema.index({
+  name: 'text',
+  address: 'text',
+  city: 'text',
+  description: 'text'
+});
 
-CREATE INDEX idx_messages_search ON messages 
-  USING gin(to_tsvector('english', subject || ' ' || content));
+// MaintenanceRequest Collection - Text Search
+maintenanceRequestSchema.index({
+  title: 'text',
+  description: 'text'
+});
+
+// Message Collection - Text Search
+messageSchema.index({
+  subject: 'text',
+  content: 'text'
+});
+```
+
+### Geospatial Indexes (Optional)
+
+For location-based queries on properties:
+
+```javascript
+// Add to Property schema
+propertySchema.add({
+  location: {
+    type: {
+      type: String,
+      enum: ['Point'],
+      default: 'Point'
+    },
+    coordinates: {
+      type: [Number], // [longitude, latitude]
+      index: '2dsphere'
+    }
+  }
+});
 ```
 
 ---
@@ -1164,44 +1300,103 @@ Response: PDF file (Content-Type: application/pdf) or JSON report data
 ## Implementation Notes
 
 ### 1. Database Choice
-**Recommended:** PostgreSQL
-- Strong ACID compliance
-- Excellent JSON/JSONB support for flexible fields
-- Full-text search capabilities
-- Array data type support
-- Mature ecosystem
+**Selected:** MongoDB
+- Flexible schema design for evolving requirements
+- Native JSON document storage
+- Excellent for rapid development
+- Powerful aggregation framework
+- Horizontal scaling capabilities
+- Built-in replication and sharding
 
-**Alternative:** MongoDB (if preferring NoSQL)
-- Flexible schema
-- Good for rapid development
-- Built-in aggregation framework
+**Version:** MongoDB 5.0+ (for better transaction support)
 
-### 2. ORM/Query Builder
+### 2. ODM (Object Document Mapper)
 **Recommended:** 
-- **Node.js:** Prisma, TypeORM, or Sequelize
-- **Python:** SQLAlchemy or Django ORM
+- **Node.js:** Mongoose (primary choice)
+  - Schema validation
+  - Middleware support
+  - Virtual properties
+  - Population (JOIN-like functionality)
+  - Built-in validation
+  
+**Alternative:** Prisma (supports MongoDB from v4+)
+- Type-safe queries
+- Auto-generated TypeScript types
+- Migration support
 
 ### 3. Migrations
-- Use a migration tool (e.g., Prisma Migrate, Knex, Alembic)
-- Version control all migrations
-- Include rollback capabilities
+MongoDB is schema-less, but structured migrations are still valuable:
 
-### 4. Data Validation
-- Implement validation at multiple levels:
-  - Database constraints (NOT NULL, UNIQUE, CHECK)
-  - Application-level validation (Joi, Yup, Zod)
-  - API input validation middleware
+**Approach:**
+- Use migrate-mongo or custom migration scripts
+- Version control all migration files
+- Handle data transformations during schema changes
+- Test migrations on staging before production
 
-### 5. Soft Deletes
-Consider adding soft delete support for important entities:
-```typescript
-{
-  deletedAt: TIMESTAMP NULL,
-  isDeleted: BOOLEAN DEFAULT false
-}
+**Example migration structure:**
+```javascript
+// migrations/20250110-add-inspection-model.js
+module.exports = {
+  async up(db) {
+    await db.createCollection('inspections');
+    await db.collection('inspections').createIndex({ propertyId: 1 });
+  },
+  
+  async down(db) {
+    await db.collection('inspections').drop();
+  }
+};
 ```
 
-**Entities to implement soft deletes:**
+### 4. Data Validation
+Implement validation at multiple levels:
+
+**MongoDB Schema Validation:**
+```javascript
+db.createCollection('users', {
+  validator: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['email', 'passwordHash', 'role'],
+      properties: {
+        email: { bsonType: 'string' },
+        role: { enum: ['landlord', 'tenant', 'admin'] }
+      }
+    }
+  }
+});
+```
+
+**Application-level validation:**
+- Mongoose schema validation (built-in)
+- Additional validation libraries (Joi, Yup, Zod)
+- API input validation middleware (express-validator)
+
+### 5. Soft Deletes
+Implement soft delete support using Mongoose plugins or custom fields:
+
+```javascript
+// Using mongoose-delete plugin
+const mongooseDelete = require('mongoose-delete');
+
+const propertySchema = new Schema({
+  // ... fields
+});
+
+propertySchema.plugin(mongooseDelete, { 
+  deletedAt: true,
+  overrideMethods: 'all'
+});
+
+// Or manual implementation
+const propertySchema = new Schema({
+  // ... fields
+  isDeleted: { type: Boolean, default: false },
+  deletedAt: { type: Date, default: null }
+});
+```
+
+**Collections to implement soft deletes:**
 - Users (for data retention/compliance)
 - Properties
 - Leases (for historical records)
@@ -1209,25 +1404,81 @@ Consider adding soft delete support for important entities:
 - Messages
 
 ### 6. Audit Trail
-Implement audit logging for sensitive operations:
+Implement audit logging using:
+
+**Mongoose Middleware:**
+```javascript
+propertySchema.pre('save', function(next) {
+  if (this.isModified()) {
+    ActivityLog.create({
+      userId: this.modifiedBy,
+      activityType: 'property_update',
+      entityType: 'property',
+      entityId: this._id,
+      description: `Property ${this.name} updated`,
+      metadata: this.modifiedPaths()
+    });
+  }
+  next();
+});
+```
+
+**Track operations:**
 - Payment transactions
 - Lease modifications
 - Property changes
 - User role changes
 
 ### 7. Data Archival
-Plan for archiving old data:
-- Completed maintenance requests (after 2 years)
-- Old messages (after 1 year)
-- Expired leases (after 7 years for legal compliance)
-- Activity logs (after 90 days)
+Use MongoDB TTL indexes and archival strategies:
+
+**TTL Indexes for automatic cleanup:**
+```javascript
+// Activity logs expire after 90 days
+activityLogSchema.index(
+  { createdAt: 1 }, 
+  { expireAfterSeconds: 7776000 }
+);
+
+// Expired notifications cleanup
+notificationSchema.index(
+  { expiresAt: 1 }, 
+  { expireAfterSeconds: 0 }
+);
+```
+
+**Manual archival to separate collections:**
+- Move completed maintenance requests to `maintenance_requests_archive`
+- Archive old messages to `messages_archive`
+- Keep expired leases for 7 years (legal compliance)
+- Use MongoDB aggregation pipelines for batch archival
 
 ### 8. Caching Strategy
-Implement caching for:
-- User profile data (Redis)
-- Property listings (Redis)
-- Dashboard aggregations (Redis with TTL)
-- Notification counts (Redis)
+Implement multi-layer caching:
+
+**Redis for hot data:**
+```javascript
+// User profile caching
+const getUserProfile = async (userId) => {
+  const cached = await redis.get(`user:${userId}`);
+  if (cached) return JSON.parse(cached);
+  
+  const user = await User.findById(userId);
+  await redis.setex(`user:${userId}`, 3600, JSON.stringify(user));
+  return user;
+};
+```
+
+**Cache strategies:**
+- User profile data (TTL: 1 hour)
+- Property listings (TTL: 5 minutes)
+- Dashboard aggregations (TTL: 2 minutes)
+- Notification counts (TTL: 30 seconds)
+- Active lease data (TTL: 10 minutes)
+
+**Cache invalidation:**
+- On document update/delete
+- Use Redis pub/sub for distributed cache invalidation
 
 ### 9. File Storage
 For documents and images:
@@ -1275,28 +1526,61 @@ Implement cron jobs or background workers for:
 - Archive old data
 - Performance analytics
 
-### 12. Database Triggers
+### 12. Mongoose Middleware (Hooks)
 
-Consider implementing triggers for:
+MongoDB doesn't have triggers, but Mongoose provides powerful middleware:
 
-```sql
--- Auto-update updatedAt timestamp
-CREATE TRIGGER update_timestamp
-BEFORE UPDATE ON properties
-FOR EACH ROW
-EXECUTE FUNCTION update_modified_timestamp();
+**Pre/Post Hooks:**
+```javascript
+// Auto-update updatedAt timestamp
+propertySchema.pre('save', function(next) {
+  this.updatedAt = new Date();
+  next();
+});
 
--- Auto-calculate occupiedUnits when lease changes
-CREATE TRIGGER update_property_occupancy
-AFTER INSERT OR UPDATE OR DELETE ON leases
-FOR EACH ROW
-EXECUTE FUNCTION recalculate_property_occupancy();
+// Auto-calculate occupiedUnits when lease changes
+leaseSchema.post('save', async function(doc) {
+  const occupiedCount = await Lease.countDocuments({
+    propertyId: doc.propertyId,
+    status: 'active'
+  });
+  await Property.findByIdAndUpdate(doc.propertyId, {
+    occupiedUnits: occupiedCount
+  });
+});
 
--- Create notification on new maintenance request
-CREATE TRIGGER notify_landlord_maintenance
-AFTER INSERT ON maintenance_requests
-FOR EACH ROW
-EXECUTE FUNCTION create_maintenance_notification();
+// Create notification on new maintenance request
+maintenanceRequestSchema.post('save', async function(doc) {
+  if (doc.isNew) {
+    await Notification.create({
+      userId: doc.landlordId,
+      type: 'maintenance',
+      title: 'New Maintenance Request',
+      content: `New request: ${doc.title}`,
+      relatedEntityType: 'maintenance_request',
+      relatedEntityId: doc._id
+    });
+  }
+});
+
+// Populate references automatically
+maintenanceRequestSchema.pre(/^find/, function(next) {
+  this.populate('assignedToId', 'firstName lastName email');
+  next();
+});
+```
+
+**Change Streams for Real-time Updates:**
+```javascript
+const changeStream = Payment.watch();
+
+changeStream.on('change', async (change) => {
+  if (change.operationType === 'update' 
+      && change.updateDescription.updatedFields.status === 'overdue') {
+    // Send overdue notification
+    await sendOverdueNotification(change.documentKey._id);
+  }
+});
 ```
 
 ### 13. Data Seeding
@@ -1367,55 +1651,195 @@ Maintain separate test database with:
 
 ---
 
-## SQL Schema Generation
+## Mongoose Schema Examples
 
-### Example: Users Table
-```sql
-CREATE TABLE users (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  email VARCHAR(255) UNIQUE NOT NULL,
-  password_hash VARCHAR(255) NOT NULL,
-  role VARCHAR(20) NOT NULL CHECK (role IN ('landlord', 'tenant', 'admin')),
-  first_name VARCHAR(100) NOT NULL,
-  last_name VARCHAR(100) NOT NULL,
-  phone VARCHAR(20),
-  address VARCHAR(255),
-  city VARCHAR(100),
-  state VARCHAR(50),
-  zip_code VARCHAR(10),
-  avatar_url VARCHAR(500),
-  is_email_verified BOOLEAN DEFAULT false,
-  is_active BOOLEAN DEFAULT true,
-  last_login_at TIMESTAMP,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+### Example: User Schema
+```javascript
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+
+const userSchema = new mongoose.Schema({
+  email: {
+    type: String,
+    required: [true, 'Email is required'],
+    unique: true,
+    lowercase: true,
+    trim: true,
+    match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email']
+  },
+  passwordHash: {
+    type: String,
+    required: [true, 'Password is required'],
+    minlength: 8,
+    select: false // Don't return password in queries by default
+  },
+  role: {
+    type: String,
+    enum: ['landlord', 'tenant', 'admin'],
+    required: true
+  },
+  firstName: {
+    type: String,
+    required: [true, 'First name is required'],
+    trim: true
+  },
+  lastName: {
+    type: String,
+    required: [true, 'Last name is required'],
+    trim: true
+  },
+  phone: String,
+  address: String,
+  city: String,
+  state: String,
+  zipCode: String,
+  avatarUrl: String,
+  isEmailVerified: {
+    type: Boolean,
+    default: false
+  },
+  isActive: {
+    type: Boolean,
+    default: true
+  },
+  lastLoginAt: Date
+}, {
+  timestamps: true // Automatically adds createdAt and updatedAt
+});
+
+// Indexes
+userSchema.index({ email: 1 }, { unique: true });
+userSchema.index({ role: 1 });
+userSchema.index({ isActive: 1 });
+
+// Virtual for full name
+userSchema.virtual('fullName').get(function() {
+  return `${this.firstName} ${this.lastName}`;
+});
+
+// Pre-save middleware to hash password
+userSchema.pre('save', async function(next) {
+  if (!this.isModified('passwordHash')) return next();
+  this.passwordHash = await bcrypt.hash(this.passwordHash, 12);
+  next();
+});
+
+// Method to compare passwords
+userSchema.methods.comparePassword = async function(candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.passwordHash);
+};
+
+module.exports = mongoose.model('User', userSchema);
 ```
 
-### Example: Properties Table
-```sql
-CREATE TABLE properties (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  landlord_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  name VARCHAR(255) NOT NULL,
-  address VARCHAR(255) NOT NULL,
-  city VARCHAR(100) NOT NULL,
-  state VARCHAR(50) NOT NULL,
-  zip_code VARCHAR(10) NOT NULL,
-  country VARCHAR(50) DEFAULT 'USA',
-  property_type VARCHAR(50) NOT NULL CHECK (property_type IN ('apartment', 'house', 'condo', 'townhouse', 'commercial')),
-  total_units INTEGER NOT NULL DEFAULT 1,
-  occupied_units INTEGER NOT NULL DEFAULT 0,
-  year_built INTEGER,
-  square_feet INTEGER,
-  description TEXT,
-  amenities TEXT[],
-  images TEXT[],
-  status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'maintenance')),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT valid_occupancy CHECK (occupied_units <= total_units)
-);
+### Example: Property Schema
+```javascript
+const mongoose = require('mongoose');
+
+const propertySchema = new mongoose.Schema({
+  landlordId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: [true, 'Landlord ID is required']
+  },
+  name: {
+    type: String,
+    required: [true, 'Property name is required'],
+    trim: true
+  },
+  address: {
+    type: String,
+    required: [true, 'Address is required'],
+    trim: true
+  },
+  city: {
+    type: String,
+    required: [true, 'City is required'],
+    trim: true
+  },
+  state: {
+    type: String,
+    required: [true, 'State is required'],
+    trim: true
+  },
+  zipCode: {
+    type: String,
+    required: [true, 'Zip code is required']
+  },
+  country: {
+    type: String,
+    default: 'USA'
+  },
+  propertyType: {
+    type: String,
+    enum: ['apartment', 'house', 'condo', 'townhouse', 'commercial'],
+    required: true
+  },
+  totalUnits: {
+    type: Number,
+    required: true,
+    default: 1,
+    min: [1, 'Total units must be at least 1']
+  },
+  occupiedUnits: {
+    type: Number,
+    required: true,
+    default: 0,
+    min: 0,
+    validate: {
+      validator: function(value) {
+        return value <= this.totalUnits;
+      },
+      message: 'Occupied units cannot exceed total units'
+    }
+  },
+  yearBuilt: {
+    type: Number,
+    min: 1800,
+    max: new Date().getFullYear()
+  },
+  squareFeet: Number,
+  description: String,
+  amenities: [String],
+  images: [String],
+  status: {
+    type: String,
+    enum: ['active', 'inactive', 'maintenance'],
+    default: 'active'
+  }
+}, {
+  timestamps: true
+});
+
+// Indexes
+propertySchema.index({ landlordId: 1 });
+propertySchema.index({ city: 1, state: 1 });
+propertySchema.index({ status: 1 });
+propertySchema.index({ landlordId: 1, status: 1 });
+
+// Text search index
+propertySchema.index({
+  name: 'text',
+  address: 'text',
+  city: 'text',
+  description: 'text'
+});
+
+// Virtual for occupancy rate
+propertySchema.virtual('occupancyRate').get(function() {
+  return (this.occupiedUnits / this.totalUnits) * 100;
+});
+
+// Virtual for vacant units
+propertySchema.virtual('vacantUnits').get(function() {
+  return this.totalUnits - this.occupiedUnits;
+});
+
+// Ensure virtuals are included in JSON
+propertySchema.set('toJSON', { virtuals: true });
+propertySchema.set('toObject', { virtuals: true });
+
+module.exports = mongoose.model('Property', propertySchema);
 ```
 
 ---
@@ -1452,12 +1876,23 @@ CREATE TABLE properties (
 
 ---
 
-**Document Version:** 1.4  
+**Document Version:** 2.0  
 **Last Updated:** November 10, 2025  
 **Maintainer:** Backend Development Team  
-**Database:** PostgreSQL 14+
+**Database:** MongoDB 5.0+  
+**ODM:** Mongoose 7.x+
 
 **Changelog:**
+- v2.0 (Nov 10, 2025): **MAJOR UPDATE** - Migrated entire schema from PostgreSQL to MongoDB
+  - Updated all schema definitions to use MongoDB/Mongoose syntax
+  - Changed from SQL tables to MongoDB collections
+  - Updated data types (UUID → ObjectId, VARCHAR → String, etc.)
+  - Replaced SQL indexes with MongoDB indexes
+  - Added embedded vs referenced data patterns
+  - Updated triggers to Mongoose middleware/hooks
+  - Added MongoDB-specific features (TTL indexes, Change Streams, text search)
+  - Updated implementation examples with Mongoose schemas
+  - Added MongoDB best practices and optimization strategies
 - v1.4 (Nov 10, 2025): Added Inspections API response patterns including scheduling, rescheduling, cancellation, and inspection reports. Documented inspection types, status tracking, inspector assignment, issue tracking, and notification requirements
 - v1.3 (Nov 10, 2025): Added Payments API response patterns including current balance, payment history with statistics and pagination, payment processing, and receipt generation. Documented payment security requirements, status types, and payment methods
 - v1.2 (Nov 10, 2025): Added Maintenance Requests API response patterns including list view, create request, filtering, and search capabilities. Documented assignedTo relationship and permissionToEnter field

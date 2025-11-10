@@ -87,17 +87,17 @@ RBAC is enforced in UI routing and conditional rendering, assuming the API provi
 
 **Tasks (Paul)**
 
-* Scaffold Vite/React 18 frontend code  
-* Add Chakra UI V2, React Router, and React Hook Form  
-* Add `ChakraProvider` \+ custom theme; set up color mode toggle  
-* Create `AppLayout` & `PublicLayout` shells with top nav/sidebar  
-* API client stub (`axios` baseURL \+ interceptors)
+* [x] Scaffold Vite/React 18 frontend code  
+* [x] Add Chakra UI V2, React Router, and React Hook Form  
+* [x] Add `ChakraProvider` \+ custom theme; set up color mode toggle  
+* [x] Create `AppLayout` & `PublicLayout` shells with top nav/sidebar  
+* [x] API client stub (`axios` baseURL \+ interceptors)
 
 **Tasks (Meko)**
 
-* Scaffold ExpressJS backend code  
-* Setup Basic Auth endpoints  
-* Create models for Lease, Maintenance, Onboarding, Payments
+* [x] Scaffold ExpressJS backend code  
+* [x] Setup Basic Auth endpoints  
+* [x] Create models for Lease, Maintenance, Onboarding, Payments
 
 ### Milestone 1 \- Auth \+ Session
 
@@ -119,6 +119,7 @@ RBAC is enforced in UI routing and conditional rendering, assuming the API provi
 **Tasks (Meko)**
 
 * Create endpoint for onboarding save
+* Flesh out complete user model
 
 ### Milestone 3 \- Tenant Dashboard
 
