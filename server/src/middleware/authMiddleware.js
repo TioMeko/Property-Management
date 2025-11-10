@@ -22,7 +22,7 @@ export async function authRequired(req, res, next) {
       id: user._id.toString(),
       role: user.role,
       name: user.name,
-      email: user.email
+      email: user.email,
     };
 
     next();
