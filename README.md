@@ -37,7 +37,31 @@ Property-Management/
 
 ## Getting Started
 
-### Backend Setup
+### Quick Start (Recommended)
+
+Run both frontend and backend with a single command:
+
+```bash
+# Install dependencies for root, frontend, and server
+npm run install:all
+
+# Start both frontend and backend in development mode
+npm start
+```
+
+The frontend will run on `http://localhost:5173` and the backend on `http://localhost:4000`.
+
+### Environment Variables
+
+1. Copy `.env.example` to `.env` in the root directory
+2. Copy `server/.env.example` to `server/.env` 
+3. Update the values in both `.env` files with your configuration
+
+### Individual Setup (Alternative)
+
+If you prefer to run services separately:
+
+#### Backend Setup
 
 ```bash
 cd server
@@ -45,13 +69,24 @@ npm install
 npm run dev  # Development mode with nodemon
 ```
 
-### Frontend Setup
+#### Frontend Setup
 
 ```bash
 cd frontend
 npm install
 npm run dev  # Development server with Vite (typically runs on http://localhost:5173)
 ```
+
+### Available Scripts
+
+From the root directory:
+
+- `npm start` - Run both frontend and backend in **development** mode
+- `npm run start:prod` - Run both frontend and backend in **production** mode
+- `npm run build` - Build the frontend for production
+- `npm run server:dev` - Run only the backend in development mode
+- `npm run frontend:dev` - Run only the frontend in development mode
+- `npm run install:all` - Install dependencies for all projects
 
 ## API Endpoints
 
