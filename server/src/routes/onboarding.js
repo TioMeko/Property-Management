@@ -1,12 +1,25 @@
 import { Router } from "express";
+import { OnboardingDraft } from "../models/OnboardingDraft.js";
+import { authRequired } from "../middleware/authMiddleware.js";
+
 const router = Router();
 
-let drafts = {}; // { userId: { step: N, data: {} } }
+// POST /onboarding  (multi-step save)
+router.post("/", authRequired, async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const { stepCompleted, data } = req.body;
 
-router.post("/", (req, res) => {
-  const { userId = 1, stepCompleted = 1, data = {} } = req.body;
-  drafts[userId] = { stepCompleted, data: { ...(drafts[userId]?.data || {}), ...data } };
-  res.json({ draftId: userId, stepCompleted });
+    const draft = await OnboardingDraft.upsertForUser({
+      userId,
+      stepCompleted,
+      stepData: data || {}
+    });
+
+    res.json({ draftId: draft._id, stepCompleted: draft.stepCompleted });
+  } catch (err) {
+    next(err);
+  }
 });
 
 export default router;
