@@ -131,10 +131,9 @@ const PaymentModal = ({ isOpen, onClose, paymentInfo, onSubmit }) => {
                 p={4}
                 borderRadius="lg"
                 bg="brand.50"
-                _dark={{ bg: 'brand.900' }}
                 borderWidth="1px"
                 borderColor="brand.200"
-                _dark={{ borderColor: 'brand.700' }}
+                _dark={{ bg: 'brand.900', borderColor: 'brand.700' }}
               >
                 <VStack spacing={2}>
                   <HStack justify="space-between" w="full">

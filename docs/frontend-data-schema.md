@@ -403,6 +403,67 @@ This document outlines all the data requirements for each component and page in 
 
 ---
 
+### Inspections Page
+
+**Endpoint:** `GET /api/inspections`
+
+**Required Data:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "string",
+      "type": "string",
+      "scheduledDate": "ISO 8601 datetime",
+      "completedDate": "ISO 8601 datetime | null",
+      "status": "scheduled" | "completed" | "pending" | "cancelled" | "failed",
+      "inspector": {
+        "id": "string",
+        "name": "string",
+        "avatarUrl": "string | null",
+        "avatarBg": "string"
+      } | null,
+      "notes": "string | null",
+      "issues": "number | null"
+    }
+  ]
+}
+```
+
+**Schedule Inspection Endpoint:** `POST /api/inspections`
+
+**Request Body:**
+```json
+{
+  "type": "move_in" | "move_out" | "routine" | "maintenance" | "safety",
+  "scheduledDate": "ISO 8601 datetime",
+  "notes": "string | null"
+}
+```
+
+**Reschedule Inspection Endpoint:** `PUT /api/inspections/:id`
+
+**Request Body:**
+```json
+{
+  "scheduledDate": "ISO 8601 datetime",
+  "notes": "string | null"
+}
+```
+
+**Cancel Inspection Endpoint:** `DELETE /api/inspections/:id` or `PUT /api/inspections/:id/cancel`
+
+**Get Inspection Report Endpoint:** `GET /api/inspections/:id/report`
+
+**Response:** PDF file or report data
+
+**Query Parameters:**
+- Status filter: `?status=scheduled|completed|cancelled`
+- Date range: `?from=YYYY-MM-DD&to=YYYY-MM-DD`
+
+---
+
 ### Settings Page
 
 **Endpoint:** `GET /api/user/settings`
@@ -799,6 +860,58 @@ This document outlines all the data requirements for each component and page in 
 
 ---
 
+### InspectionCard
+
+**Props Schema:**
+```typescript
+{
+  inspection: {
+    id: string;
+    type: string;
+    scheduledDate: string;
+    completedDate?: string;
+    status: 'scheduled' | 'completed' | 'pending' | 'cancelled' | 'failed';
+    inspector?: {
+      name: string;
+      avatarUrl?: string;
+      avatarBg: string;
+    };
+    notes?: string;
+    issues?: number;
+  };
+  onClick?: (inspection: Inspection) => void;
+  onEdit?: (inspection: Inspection) => void;
+  onCancel?: (inspection: Inspection) => void;
+  onViewReport?: (inspection: Inspection) => void;
+}
+```
+
+---
+
+### ScheduleInspectionModal
+
+**Props Schema:**
+```typescript
+{
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (inspectionData: {
+    id?: string;
+    type: string;
+    scheduledDate: string;
+    notes: string;
+  }) => Promise<void>;
+  editInspection?: {
+    id: string;
+    type: string;
+    scheduledDate: string;
+    notes: string;
+  };
+}
+```
+
+---
+
 ### Breadcrumbs
 
 **Props Schema:**
@@ -866,6 +979,16 @@ This document outlines all the data requirements for each component and page in 
 - `POST /api/payments` - Process payment
 - `GET /api/payments/:id` - Get payment details
 - `GET /api/payments/:id/receipt` - Download payment receipt
+
+### Inspections
+- `GET /api/inspections` - Get all inspections
+  - Query params: `?status=scheduled&from=YYYY-MM-DD&to=YYYY-MM-DD`
+- `POST /api/inspections` - Schedule new inspection
+- `GET /api/inspections/:id` - Get inspection details
+- `PUT /api/inspections/:id` - Reschedule inspection
+- `DELETE /api/inspections/:id` - Cancel inspection
+- `PUT /api/inspections/:id/cancel` - Cancel inspection (alternative)
+- `GET /api/inspections/:id/report` - Download inspection report
 
 ### Maintenance
 - `GET /api/maintenance/requests` - Get all maintenance requests
@@ -1073,6 +1196,9 @@ interface Notification {
 3. Maintenance requests CRUD ✅
 4. Maintenance request filtering and search ✅
 5. Maintenance request status tracking ✅
+6. Inspection scheduling ✅
+7. Inspection management ✅
+8. Inspection history and reports ✅
 
 ### Phase 4 - Communication & Notifications
 1. Messaging system
@@ -1087,11 +1213,12 @@ interface Notification {
 
 ---
 
-**Document Version:** 1.3  
+**Document Version:** 1.4  
 **Last Updated:** November 10, 2025  
 **Maintainer:** Development Team  
 
 **Changelog:**
+- v1.4 (Nov 10, 2025): Added Inspections page data schema with scheduling, rescheduling, and inspection history. Added InspectionCard and ScheduleInspectionModal components. Added inspection API endpoints with filtering, status tracking, and report generation
 - v1.3 (Nov 10, 2025): Added Payments page data schema with current balance, payment history, and payment processing. Added PaymentCard and PaymentModal components. Added payment API endpoints with receipt download functionality
 - v1.2 (Nov 10, 2025): Added Maintenance page data schema, MaintenanceRequestCard and NewRequestModal components, maintenance API endpoints with filtering and search capabilities
 - v1.1 (Nov 10, 2025): Added tooltip support to MetricCard component and enhanced Tenant Dashboard metrics with detailed data for tooltips (amount paid, latest maintenance request, latest message preview)

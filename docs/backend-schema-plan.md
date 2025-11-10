@@ -1053,6 +1053,114 @@ Response: PDF file (Content-Type: application/pdf)
 
 ---
 
+### Inspections Response
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "UUID",
+      "propertyId": "UUID",
+      "unitId": "UUID | null",
+      "tenantId": "UUID",
+      "landlordId": "UUID",
+      "inspectorId": "UUID | null",
+      "type": "move_in" | "move_out" | "routine" | "maintenance" | "safety",
+      "scheduledDate": "ISO 8601 datetime",
+      "completedDate": "ISO 8601 datetime | null",
+      "status": "scheduled" | "completed" | "pending" | "cancelled" | "failed",
+      "notes": "string | null",
+      "issues": "number | null",
+      "reportUrl": "string | null",
+      "inspector": {
+        "id": "UUID",
+        "name": "string",
+        "email": "string",
+        "phone": "string",
+        "avatarUrl": "string | null",
+        "avatarBg": "string"
+      } | null,
+      "createdAt": "ISO 8601 datetime",
+      "updatedAt": "ISO 8601 datetime"
+    }
+  ],
+  "timestamp": "2024-12-15T10:30:00Z"
+}
+```
+
+### Schedule Inspection Request
+```json
+POST /api/inspections
+{
+  "propertyId": "UUID",
+  "unitId": "UUID | null",
+  "type": "move_in" | "move_out" | "routine" | "maintenance" | "safety",
+  "scheduledDate": "ISO 8601 datetime",
+  "notes": "string | null"
+}
+```
+
+### Schedule Inspection Response
+```json
+{
+  "success": true,
+  "data": {
+    "id": "UUID",
+    "type": "string",
+    "scheduledDate": "ISO 8601 datetime",
+    "status": "scheduled",
+    "notes": "string | null",
+    "createdAt": "ISO 8601 datetime"
+  },
+  "message": "Inspection scheduled successfully",
+  "timestamp": "2024-12-15T10:30:00Z"
+}
+```
+
+### Reschedule Inspection
+```json
+PUT /api/inspections/:id
+{
+  "scheduledDate": "ISO 8601 datetime",
+  "notes": "string | null"
+}
+
+Response: Same as Schedule Inspection Response
+```
+
+### Cancel Inspection
+```json
+DELETE /api/inspections/:id
+Or: PUT /api/inspections/:id/cancel
+
+Response:
+{
+  "success": true,
+  "message": "Inspection cancelled successfully",
+  "timestamp": "2024-12-15T10:30:00Z"
+}
+```
+
+### Inspection Report Response
+```
+GET /api/inspections/:id/report
+Response: PDF file (Content-Type: application/pdf) or JSON report data
+```
+
+**Notes:**
+- Inspection types: `move_in`, `move_out`, `routine`, `maintenance`, `safety`
+- Inspection status: `scheduled`, `completed`, `pending`, `cancelled`, `failed`
+- Support filtering by status, type, and date range
+- Inspector assignment can be automatic or manual
+- Issues field tracks number of problems found during inspection
+- Report generation should happen after inspection completion
+- Notifications should be sent 24 hours before scheduled inspection
+- Inspections can be rescheduled up to 2 hours before scheduled time
+- Completed inspections should include issue count and report URL
+- Inspector information includes contact details for coordination
+
+---
+
 ## Implementation Notes
 
 ### 1. Database Choice
@@ -1344,12 +1452,13 @@ CREATE TABLE properties (
 
 ---
 
-**Document Version:** 1.3  
+**Document Version:** 1.4  
 **Last Updated:** November 10, 2025  
 **Maintainer:** Backend Development Team  
 **Database:** PostgreSQL 14+
 
 **Changelog:**
+- v1.4 (Nov 10, 2025): Added Inspections API response patterns including scheduling, rescheduling, cancellation, and inspection reports. Documented inspection types, status tracking, inspector assignment, issue tracking, and notification requirements
 - v1.3 (Nov 10, 2025): Added Payments API response patterns including current balance, payment history with statistics and pagination, payment processing, and receipt generation. Documented payment security requirements, status types, and payment methods
 - v1.2 (Nov 10, 2025): Added Maintenance Requests API response patterns including list view, create request, filtering, and search capabilities. Documented assignedTo relationship and permissionToEnter field
 - v1.1 (Nov 10, 2025): Added Tenant Dashboard API response pattern with aggregated data from multiple models to support enhanced UI tooltips and metric cards

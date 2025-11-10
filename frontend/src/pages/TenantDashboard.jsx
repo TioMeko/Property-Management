@@ -236,7 +236,7 @@ const TenantDashboard = () => {
               title="Schedule Inspection"
               description="Book a property inspection"
               colorScheme="slate"
-              onClick={() => console.log('Schedule')}
+              onClick={() => navigate('/tenant/inspections')}
             />
           </SimpleGrid>
         </Box>
