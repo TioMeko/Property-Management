@@ -1,0 +1,275 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2025-11-11T00:00:00.000Z",
+  "__export_source": "insomnia.desktop.app:v2023.5.8",
+  "resources": [
+    {
+      "_id": "wrk_property_mgmt",
+      "_type": "workspace",
+      "name": "Property Management API",
+      "description": "API endpoints for Property Management System",
+      "scope": "collection"
+    },
+    {
+      "_id": "env_base",
+      "_type": "environment",
+      "name": "Base Environment",
+      "data": {
+        "base_url": "http://localhost:4000",
+        "token": ""
+      },
+      "parentId": "wrk_property_mgmt"
+    },
+    {
+      "_id": "jar_cookies",
+      "_type": "cookie_jar",
+      "name": "Default Jar",
+      "cookies": [],
+      "parentId": "wrk_property_mgmt"
+    },
+    {
+      "_id": "fld_health",
+      "_type": "request_group",
+      "name": "Health Check",
+      "parentId": "wrk_property_mgmt"
+    },
+    {
+      "_id": "req_health_check",
+      "_type": "request",
+      "name": "Health Check",
+      "method": "GET",
+      "url": "{{ _.base_url }}/health",
+      "body": {},
+      "parentId": "fld_health"
+    },
+    {
+      "_id": "fld_auth",
+      "_type": "request_group",
+      "name": "Authentication",
+      "parentId": "wrk_property_mgmt"
+    },
+    {
+      "_id": "req_register",
+      "_type": "request",
+      "name": "Register User",
+      "method": "POST",
+      "url": "{{ _.base_url }}/auth/register",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"tenant@example.com\",\n  \"password\": \"password123\",\n  \"name\": \"John Doe\",\n  \"role\": \"tenant\"\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parentId": "fld_auth"
+    },
+    {
+      "_id": "req_login",
+      "_type": "request",
+      "name": "Login",
+      "method": "POST",
+      "url": "{{ _.base_url }}/auth/login",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"tenant@example.com\",\n  \"password\": \"password123\"\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parentId": "fld_auth"
+    },
+    {
+      "_id": "req_get_me",
+      "_type": "request",
+      "name": "Get Current User",
+      "method": "GET",
+      "url": "{{ _.base_url }}/auth/me",
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "headers": [],
+      "parentId": "fld_auth"
+    },
+    {
+      "_id": "req_forgot_password",
+      "_type": "request",
+      "name": "Forgot Password",
+      "method": "POST",
+      "url": "{{ _.base_url }}/auth/forgot-password",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"tenant@example.com\"\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parentId": "fld_auth"
+    },
+    {
+      "_id": "fld_onboarding",
+      "_type": "request_group",
+      "name": "Onboarding",
+      "parentId": "wrk_property_mgmt"
+    },
+    {
+      "_id": "req_save_onboarding",
+      "_type": "request",
+      "name": "Save Onboarding Step",
+      "method": "POST",
+      "url": "{{ _.base_url }}/onboarding",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"stepCompleted\": 1,\n  \"data\": {\n    \"personalInfo\": {\n      \"firstName\": \"John\",\n      \"lastName\": \"Doe\",\n      \"phone\": \"555-0123\"\n    }\n  }\n}"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parentId": "fld_onboarding"
+    },
+    {
+      "_id": "fld_maintenance",
+      "_type": "request_group",
+      "name": "Maintenance Requests",
+      "parentId": "wrk_property_mgmt"
+    },
+    {
+      "_id": "req_create_maintenance",
+      "_type": "request",
+      "name": "Create Maintenance Request (Tenant)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/maintenance",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"issueType\": \"plumbing\",\n  \"description\": \"Kitchen sink is leaking\"\n}"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parentId": "fld_maintenance"
+    },
+    {
+      "_id": "req_get_maintenance",
+      "_type": "request",
+      "name": "Get Maintenance Requests",
+      "method": "GET",
+      "url": "{{ _.base_url }}/maintenance",
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "headers": [],
+      "parentId": "fld_maintenance"
+    },
+    {
+      "_id": "req_update_maintenance",
+      "_type": "request",
+      "name": "Update Maintenance Status (Admin)",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/maintenance/:id",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"status\": \"in_progress\"\n}"
+      },
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "parameters": [],
+      "parentId": "fld_maintenance"
+    },
+    {
+      "_id": "fld_payments",
+      "_type": "request_group",
+      "name": "Payments",
+      "parentId": "wrk_property_mgmt"
+    },
+    {
+      "_id": "req_get_payments",
+      "_type": "request",
+      "name": "Get Tenant Payments",
+      "method": "GET",
+      "url": "{{ _.base_url }}/payments",
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "headers": [],
+      "parentId": "fld_payments"
+    },
+    {
+      "_id": "fld_lease",
+      "_type": "request_group",
+      "name": "Lease",
+      "parentId": "wrk_property_mgmt"
+    },
+    {
+      "_id": "req_get_lease",
+      "_type": "request",
+      "name": "Get Active Lease",
+      "method": "GET",
+      "url": "{{ _.base_url }}/lease",
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "headers": [],
+      "parentId": "fld_lease"
+    },
+    {
+      "_id": "fld_tenant",
+      "_type": "request_group",
+      "name": "Tenant",
+      "parentId": "wrk_property_mgmt"
+    },
+    {
+      "_id": "req_get_tenant_summary",
+      "_type": "request",
+      "name": "Get Tenant Dashboard Summary",
+      "method": "GET",
+      "url": "{{ _.base_url }}/tenant/summary",
+      "body": {},
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.token }}"
+      },
+      "headers": [],
+      "parentId": "fld_tenant"
+    }
+  ]
+}
+

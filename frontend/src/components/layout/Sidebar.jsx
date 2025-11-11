@@ -154,20 +154,11 @@ const Sidebar = ({
       {/* User Profile */}
       <Box px={isCollapsed ? 2 : 4} py={4}>
         {isCollapsed ? (
-          <Tooltip label="John Doe" placement="right" hasArrow>
-            <Flex justify="center">
-              <UserMenu
-                userName="John Doe"
-                userRole={userType === "tenant" ? "Tenant" : "Landlord"}
-                isCompact
-              />
-            </Flex>
-          </Tooltip>
+          <Flex justify="center">
+            <UserMenu isCompact />
+          </Flex>
         ) : (
-          <UserMenu
-            userName="John Doe"
-            userRole={userType === "tenant" ? "Tenant" : "Landlord"}
-          />
+          <UserMenu />
         )}
       </Box>
 

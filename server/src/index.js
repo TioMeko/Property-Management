@@ -9,7 +9,7 @@ import onboardingRoutes from "./routes/onboarding.js";
 import maintenanceRoutes from "./routes/maintenance.js";
 import paymentsRoutes from "./routes/payments.js";
 import leaseRoutes from "./routes/lease.js";
-import tenantRoutes from "./routes/tenant.js";   // <-- add this
+import tenantRoutes from "./routes/tenant.js"; 
 
 const app = express();
 app.use(express.json());
@@ -23,7 +23,7 @@ app.use("/onboarding", onboardingRoutes);
 app.use("/maintenance", maintenanceRoutes);
 app.use("/payments", paymentsRoutes);
 app.use("/lease", leaseRoutes);
-app.use("/tenant", tenantRoutes);                // <-- and mount it here
+app.use("/tenant", tenantRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error(err);

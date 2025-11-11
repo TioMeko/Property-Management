@@ -10,23 +10,49 @@ import {
   VStack,
   Text,
   Box,
+  useToast,
 } from "@chakra-ui/react";
 import { User, Settings, HelpCircle, LogOut } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import React from "react";
-const UserMenu = ({
-  userName = "John Doe",
-  userRole = "Tenant",
-  isCompact = false,
-}) => {
+import { useApp } from "../../context/useApp";
+
+const UserMenu = ({ isCompact = false }) => {
   const navigate = useNavigate();
+  const { user, logout } = useApp();
+  const toast = useToast();
   
   const handleSettingsClick = () => {
-    const settingsPath = userRole === 'Tenant' 
+    const settingsPath = user?.role === 'tenant' 
       ? '/tenant/settings' 
       : '/landlord/settings';
     navigate(settingsPath);
   };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast({
+        title: "Logged out successfully",
+        status: "success",
+        duration: 2000,
+        isClosable: true,
+      });
+      navigate('/');
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast({
+        title: "Logout failed",
+        description: "Please try again.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const displayName = user?.name || user?.fullName || user?.email || "User";
+  const displayRole = user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : "User";
 
   return (
     <Menu>
@@ -34,7 +60,8 @@ const UserMenu = ({
         {isCompact ? (
           <Avatar
             size="sm"
-            name={userName}
+            name={displayName}
+            src={user?.avatarUrl}
             bg="brand.500"
             cursor="pointer"
             _hover={{
@@ -59,13 +86,13 @@ const UserMenu = ({
               },
             }}
           >
-            <Avatar size="sm" name={userName} bg="brand.500" />
+            <Avatar size="sm" name={displayName} src={user?.avatarUrl} bg="brand.500" />
             <VStack align="start" spacing={0} flex={1}>
               <Text fontSize="sm" fontWeight="semibold">
-                {userName}
+                {displayName}
               </Text>
               <Text fontSize="xs" color="gray.500">
-                {userRole}
+                {displayRole}
               </Text>
             </VStack>
           </HStack>
@@ -74,10 +101,10 @@ const UserMenu = ({
       <MenuList>
         <Box px={3} py={2}>
           <Text fontSize="sm" fontWeight="semibold">
-            {userName}
+            {displayName}
           </Text>
           <Text fontSize="xs" color="gray.500">
-            {userRole}
+            {displayRole}
           </Text>
         </Box>
         <MenuDivider />
@@ -96,6 +123,7 @@ const UserMenu = ({
           icon={<Icon as={LogOut} boxSize={4} />}
           color="red.500"
           _dark={{ color: "red.400" }}
+          onClick={handleLogout}
         >
           Logout
         </MenuItem>

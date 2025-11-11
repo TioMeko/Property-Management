@@ -15,13 +15,29 @@ import {
   Text,
   Link,
   useColorModeValue,
+  useToast,
+  Alert,
+  AlertIcon,
+  AlertDescription,
 } from "@chakra-ui/react";
 import { X } from "lucide-react";
 import { Icon } from "@chakra-ui/react";
 import React from "react";
+import { useNavigate } from "react-router-dom";
+import { useApp } from "../context/useApp";
 
 const AuthModal = ({ isOpen, onClose }) => {
   const [mode, setMode] = useState("login"); // 'login' or 'signup'
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [role, setRole] = useState("tenant");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState("");
+
+  const { login, signup, loading } = useApp();
+  const navigate = useNavigate();
+  const toast = useToast();
 
   // Dark theme colors
   const bgColor = useColorModeValue("gray.800", "gray.800");
@@ -33,10 +49,77 @@ const AuthModal = ({ isOpen, onClose }) => {
   const buttonBg = useColorModeValue("blue.500", "blue.500");
   const buttonHoverBg = useColorModeValue("blue.600", "blue.600");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission here
-    console.log(`${mode} submitted`);
+    setFormError("");
+    setIsSubmitting(true);
+
+    try {
+      if (mode === "login") {
+        const result = await login({ email, password });
+        
+        if (result.success) {
+          toast({
+            title: "Login Successful",
+            description: `Welcome back, ${result.user.name || result.user.email}!`,
+            status: "success",
+            duration: 3000,
+            isClosable: true,
+          });
+          
+          // Navigate to appropriate dashboard based on user role
+          const dashboardPath = result.user.role === "landlord" 
+            ? "/landlord/dashboard" 
+            : "/tenant/dashboard";
+          
+          onClose();
+          navigate(dashboardPath);
+        } else {
+          setFormError(result.error || "Login failed. Please try again.");
+        }
+      } else {
+        // Signup
+        const result = await signup({ 
+          email, 
+          password, 
+          name,
+          role,
+        });
+        
+        if (result.success) {
+          toast({
+            title: "Account Created",
+            description: "Welcome to Conglomo!",
+            status: "success",
+            duration: 3000,
+            isClosable: true,
+          });
+          
+          // Navigate to appropriate dashboard based on user role
+          const dashboardPath = result.user.role === "landlord" 
+            ? "/landlord/dashboard" 
+            : "/tenant/dashboard";
+          
+          onClose();
+          navigate(dashboardPath);
+        } else {
+          setFormError(result.error || "Signup failed. Please try again.");
+        }
+      }
+    } catch (error) {
+      setFormError("An unexpected error occurred. Please try again.");
+      console.error("Auth error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleModeChange = (newMode) => {
+    setMode(newMode);
+    setFormError("");
+    setEmail("");
+    setPassword("");
+    setName("");
   };
 
   return (
@@ -77,7 +160,7 @@ const AuthModal = ({ isOpen, onClose }) => {
               <Button
                 flex={1}
                 variant="ghost"
-                onClick={() => setMode("login")}
+                onClick={() => handleModeChange("login")}
                 bg={mode === "login" ? toggleActiveBg : "transparent"}
                 color={textColor}
                 borderRadius="md"
@@ -93,7 +176,7 @@ const AuthModal = ({ isOpen, onClose }) => {
               <Button
                 flex={1}
                 variant="ghost"
-                onClick={() => setMode("signup")}
+                onClick={() => handleModeChange("signup")}
                 bg={mode === "signup" ? toggleActiveBg : "transparent"}
                 color={textColor}
                 borderRadius="md"
@@ -108,17 +191,52 @@ const AuthModal = ({ isOpen, onClose }) => {
               </Button>
             </HStack>
 
+            {/* Error Alert */}
+            {formError && (
+              <Alert status="error" borderRadius="md" bg="red.900">
+                <AlertIcon />
+                <AlertDescription fontSize="sm">{formError}</AlertDescription>
+              </Alert>
+            )}
+
             {/* Form */}
             <form onSubmit={handleSubmit}>
               <VStack spacing={5} align="stretch">
+                {/* Name Field (only for signup) */}
+                {mode === "signup" && (
+                  <FormControl isRequired>
+                    <FormLabel color={textColor} fontSize="sm" mb={2}>
+                      Full Name
+                    </FormLabel>
+                    <Input
+                      type="text"
+                      placeholder="John Doe"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      bg={inputBg}
+                      borderColor={inputBorder}
+                      color={textColor}
+                      _placeholder={{ color: "gray.400" }}
+                      _hover={{ borderColor: "gray.500" }}
+                      _focus={{
+                        borderColor: "blue.500",
+                        boxShadow: "0 0 0 1px var(--chakra-colors-blue-500)",
+                      }}
+                      borderRadius="md"
+                    />
+                  </FormControl>
+                )}
+
                 {/* Email Field */}
-                <FormControl>
+                <FormControl isRequired>
                   <FormLabel color={textColor} fontSize="sm" mb={2}>
                     Email
                   </FormLabel>
                   <Input
                     type="email"
                     placeholder="name@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     bg={inputBg}
                     borderColor={inputBorder}
                     color={textColor}
@@ -133,13 +251,15 @@ const AuthModal = ({ isOpen, onClose }) => {
                 </FormControl>
 
                 {/* Password Field */}
-                <FormControl>
+                <FormControl isRequired>
                   <FormLabel color={textColor} fontSize="sm" mb={2}>
                     Password
                   </FormLabel>
                   <Input
                     type="password"
                     placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     bg={inputBg}
                     borderColor={inputBorder}
                     color={textColor}
@@ -153,6 +273,45 @@ const AuthModal = ({ isOpen, onClose }) => {
                   />
                 </FormControl>
 
+                {/* Role Selection (only for signup) */}
+                {mode === "signup" && (
+                  <FormControl>
+                    <FormLabel color={textColor} fontSize="sm" mb={2}>
+                      I am a
+                    </FormLabel>
+                    <HStack spacing={0} borderRadius="md" overflow="hidden" bg={toggleInactiveBg}>
+                      <Button
+                        flex={1}
+                        variant="ghost"
+                        onClick={() => setRole("tenant")}
+                        bg={role === "tenant" ? toggleActiveBg : "transparent"}
+                        color={textColor}
+                        size="sm"
+                        _hover={{
+                          bg: role === "tenant" ? toggleActiveBg : "gray.600",
+                        }}
+                        fontWeight={role === "tenant" ? "semibold" : "normal"}
+                      >
+                        Tenant
+                      </Button>
+                      <Button
+                        flex={1}
+                        variant="ghost"
+                        onClick={() => setRole("landlord")}
+                        bg={role === "landlord" ? toggleActiveBg : "transparent"}
+                        color={textColor}
+                        size="sm"
+                        _hover={{
+                          bg: role === "landlord" ? toggleActiveBg : "gray.600",
+                        }}
+                        fontWeight={role === "landlord" ? "semibold" : "normal"}
+                      >
+                        Landlord
+                      </Button>
+                    </HStack>
+                  </FormControl>
+                )}
+
                 {/* Submit Button */}
                 <Button
                   type="submit"
@@ -163,6 +322,8 @@ const AuthModal = ({ isOpen, onClose }) => {
                   w="full"
                   borderRadius="md"
                   fontWeight="semibold"
+                  isLoading={isSubmitting || loading}
+                  loadingText={mode === "login" ? "Logging in..." : "Signing up..."}
                 >
                   {mode === "login" ? "Log In" : "Sign Up"}
                 </Button>

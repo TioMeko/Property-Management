@@ -73,11 +73,7 @@ const DashboardHeader = ({
           aria-label="Toggle color mode"
         />
         <Box display={{ base: "none", md: "block" }}>
-          <UserMenu
-            userName="John Doe"
-            userRole={userType === "tenant" ? "Tenant" : "Landlord"}
-            isCompact
-          />
+          <UserMenu isCompact />
         </Box>
       </HStack>
     </Flex>
