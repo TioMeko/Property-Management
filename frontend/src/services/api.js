@@ -67,7 +67,7 @@ api.interceptors.response.use(
 // API endpoint functions
 export const authAPI = {
   login: (credentials) => api.post('/auth/login', credentials),
-  signup: (userData) => api.post('/auth/signup', userData),
+  signup: (userData) => api.post('/auth/register', userData),
   logout: () => api.post('/auth/logout'),
   verifyToken: () => api.get('/auth/verify-token'),
 }
