@@ -8,6 +8,7 @@ import authRoutes from "./routes/auth.js";
 import onboardingRoutes from "./routes/onboarding.js";
 import maintenanceRoutes from "./routes/maintenance.js";
 import paymentsRoutes from "./routes/payments.js";
+import invoiceRoutes from "./routes/invoices.js";
 import leaseRoutes from "./routes/lease.js";
 import tenantRoutes from "./routes/tenant.js"; 
 
@@ -22,6 +23,7 @@ app.use("/auth", authRoutes);
 app.use("/onboarding", onboardingRoutes);
 app.use("/maintenance", maintenanceRoutes);
 app.use("/payments", paymentsRoutes);
+app.use("/invoices", invoiceRoutes);
 app.use("/lease", leaseRoutes);
 app.use("/tenant", tenantRoutes);
 
