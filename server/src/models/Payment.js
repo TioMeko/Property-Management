@@ -4,17 +4,20 @@ const paymentSchema = new mongoose.Schema(
   {
     tenant: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     lease: { type: mongoose.Schema.Types.ObjectId, ref: "Lease" },
+    invoice: { type: mongoose.Schema.Types.ObjectId, ref: "Invoice" }, 
+    //Need to create an invoice model, (invoice number, line item array of objects)
+    // title, description, amount)
     date: { type: Date, required: true },
     amount: { type: Number, required: true },
     status: {
       type: String,
-      enum: ["paid", "pending", "overdue"],
-      default: "pending"
+      enum: ["unpaid", "paid", "pending", "overdue"],
+      default: "unpaid"
     },
     method: {
       type: String,
-      enum: ["ach", "card", "cash", "other"],
-      default: "other"
+      enum: ["ach", "card", "cash", "check"],
+      default: "ach"
     }
   },
   { timestamps: true }
