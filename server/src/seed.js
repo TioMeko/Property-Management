@@ -50,11 +50,14 @@ async function run() {
 
     const lease = await Lease.create({
       tenant: tenant._id,
+      landlord: admin._id,
       unit: "2B1B",
       startDate: new Date("2025-08-01"),
       endDate: new Date("2026-07-31"),
       rentAmount: 1450,
       depositAmount: 1450,
+      paymentDueDay: 1,
+      gracePeriod: 5,
       status: "active",
       termsUrl: "https://example.com/lease.pdf"
     });
@@ -145,8 +148,11 @@ async function run() {
 
     const ticket = await MaintenanceRequest.create({
       tenant: tenant._id,
-      issueType: "Plumbing",
+      title: "Kitchen faucet leak",
+      issueCategory: "Plumbing",
       description: "Leaking faucet in kitchen.",
+      priority: "high",
+      permissionToEnter: true,
       status: "pending"
     });
 
