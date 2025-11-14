@@ -100,4 +100,9 @@ router.post("/forgot-password", async (req, res, _next) => {
   });
 });
 
+
+// POST /auth/logout
+// Need to create a logout route
+
+
 export default router;

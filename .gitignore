@@ -34,6 +34,8 @@ Thumbs.db
 *.swo
 *.swn
 
+docs/
+
 # --- Temporary / Cache Files ---
 *.tmp
 *.temp

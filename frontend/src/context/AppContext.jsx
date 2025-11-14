@@ -117,7 +117,7 @@ export const AppProvider = ({ children }) => {
       if (user.role === 'tenant') {
         response = await tenantAPI.getDashboard()
       } else if (user.role === 'landlord') {
-        response = await landlordAPI.getDashboard()
+        throw new Error('Landlord dashboard API is not available yet')
       } else {
         throw new Error('Invalid user role')
       }

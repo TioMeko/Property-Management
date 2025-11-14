@@ -12,3 +12,5 @@ const noticeSchema = new mongoose.Schema(
 );
 
 export const Notice = mongoose.model("Notice", noticeSchema);
+
+// MVP to be expanded on to full notification system

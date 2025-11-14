@@ -5,6 +5,7 @@ const onboardingDraftSchema = new mongoose.Schema(
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     stepCompleted: { type: Number, default: 1 }, // 1-5
     data: { type: mongoose.Schema.Types.Mixed, default: {} } // JSON blob of multi-step fields
+    // Remove data and add other fields
   },
   { timestamps: true }
 );
@@ -31,3 +32,5 @@ onboardingDraftSchema.statics.upsertForUser = async function ({
 };
 
 export const OnboardingDraft = mongoose.model("OnboardingDraft", onboardingDraftSchema);
+
+// MVP to be expanded on to full onboarding system

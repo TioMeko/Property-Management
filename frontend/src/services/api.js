@@ -2,7 +2,7 @@ import axios from 'axios'
 
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:4000',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -68,70 +68,44 @@ api.interceptors.response.use(
 export const authAPI = {
   login: (credentials) => api.post('/auth/login', credentials),
   signup: (userData) => api.post('/auth/register', userData),
-  logout: () => api.post('/auth/logout'),
-  verifyToken: () => api.get('/auth/verify-token'),
+  logout: () => Promise.resolve(),
+  verifyToken: () => api.get('/auth/me'),
+  requestPasswordReset: (email) => api.post('/auth/forgot-password', { email }),
+}
+
+export const onboardingAPI = {
+  saveDraft: (payload) => api.post('/onboarding', payload),
 }
 
 export const tenantAPI = {
-  getDashboard: () => api.get('/tenant/dashboard'),
-  getProperty: () => api.get('/tenant/property'),
-  getLease: () => api.get('/tenant/lease'),
+  getDashboard: () => api.get('/tenant/summary'),
+  getLease: () => api.get('/lease'),
+  getPayments: () => api.get('/payments'),
 }
 
 export const landlordAPI = {
-  getDashboard: () => api.get('/landlord/dashboard'),
-  getProperties: () => api.get('/landlord/properties'),
-  getTenants: () => api.get('/landlord/tenants'),
-  getFinances: () => api.get('/landlord/finances'),
-  getRevenueChart: () => api.get('/landlord/revenue/chart'),
+  getDashboard: () =>
+    Promise.reject(new Error('Landlord dashboard routes are not available on the backend yet.')),
 }
 
 export const maintenanceAPI = {
-  getRequests: (params) => api.get('/maintenance/requests', { params }),
-  createRequest: (data) => api.post('/maintenance/requests', data),
-  updateRequest: (id, data) => api.put(`/maintenance/requests/${id}`, data),
-  deleteRequest: (id) => api.delete(`/maintenance/requests/${id}`),
+  getRequests: () => api.get('/maintenance'),
+  createRequest: (data) => api.post('/maintenance', data),
+  updateStatus: (id, status) => api.patch(`/maintenance/${id}`, { status }),
 }
 
 export const paymentAPI = {
-  getBalance: () => api.get('/payments/balance'),
-  getHistory: (params) => api.get('/payments/history', { params }),
-  processPayment: (data) => api.post('/payments', data),
-  getReceipt: (id) => api.get(`/payments/${id}/receipt`),
+  list: () => api.get('/payments'),
 }
 
-export const inspectionAPI = {
-  getInspections: (params) => api.get('/inspections', { params }),
-  scheduleInspection: (data) => api.post('/inspections', data),
-  updateInspection: (id, data) => api.put(`/inspections/${id}`, data),
-  cancelInspection: (id) => api.delete(`/inspections/${id}`),
-  getReport: (id) => api.get(`/inspections/${id}/report`),
-}
-
-export const messageAPI = {
-  getMessages: () => api.get('/messages'),
-  sendMessage: (data) => api.post('/messages', data),
-  getThread: (id) => api.get(`/messages/${id}`),
-  markAsRead: (id) => api.put(`/messages/${id}/read`),
+export const leaseAPI = {
+  getActive: () => api.get('/lease'),
 }
 
 export const userAPI = {
-  getProfile: () => api.get('/user/profile'),
-  updateProfile: (data) => api.put('/user/profile', data),
-  uploadAvatar: (formData) => api.post('/user/avatar', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  }),
-  getSettings: () => api.get('/user/settings'),
-  updateSettings: (data) => api.put('/user/settings', data),
-  changePassword: (data) => api.put('/user/password', data),
-  deleteAccount: () => api.delete('/user/account'),
-}
-
-export const notificationAPI = {
-  getNotifications: () => api.get('/notifications'),
-  getUnreadCount: () => api.get('/notifications/unread'),
-  markAsRead: (id) => api.put(`/notifications/${id}/read`),
-  markAllAsRead: () => api.put('/notifications/read-all'),
+  getProfile: () => api.get('/auth/me'),
+  updateProfile: () =>
+    Promise.reject(new Error('User profile update route is not available on the backend yet.')),
 }
 
 export default api
