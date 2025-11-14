@@ -7,7 +7,7 @@ const paymentSchema = new mongoose.Schema(
     invoice: { type: mongoose.Schema.Types.ObjectId, ref: "Invoice" }, 
     //Need to create an invoice model, (invoice number, line item array of objects)
     // title, description, amount)
-    date: { type: Date, required: true },
+    date: { type: Date, required: true, default: Date.now },
     amount: { type: Number, required: true },
     status: {
       type: String,
