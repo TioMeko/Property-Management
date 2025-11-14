@@ -9,12 +9,15 @@ const router = Router();
 router.post("/", authRequired, requireRole("tenant"), async (req, res, next) => {
   try {
     const tenantId = req.user.id;
-    const { issueType, description } = req.body;
+    const { title, issueCategory, description, priority, permissionToEnter } = req.body;
 
     const ticket = await MaintenanceRequest.create({
       tenant: tenantId,
-      issueType,
-      description
+      title,
+      issueCategory,
+      description,
+      priority,
+      permissionToEnter
     });
 
     res.json({ id: ticket._id, status: ticket.status });
@@ -42,8 +45,11 @@ router.get("/", authRequired, async (req, res, next) => {
     res.json(
       tickets.map(t => ({
         id: t._id,
-        issueType: t.issueType,
+        title: t.title,
+        issueCategory: t.issueCategory,
         description: t.description,
+        priority: t.priority,
+        permissionToEnter: t.permissionToEnter,
         createdAt: t.createdAt,
         status: t.status
       }))
@@ -62,7 +68,7 @@ router.patch(
   async (req, res, next) => {
     try {
       const { status } = req.body;
-      const allowed = ["pending", "in_progress", "completed"];
+      const allowed = ["pending", "in_progress", "completed", "cancelled"];
       if (!allowed.includes(status)) {
         return res.status(400).json({ message: "Invalid status" });
       }

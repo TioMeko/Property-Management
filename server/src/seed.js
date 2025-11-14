@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import { connectDB } from "./config/db.js";
 import { User } from "./models/User.js";
 import { Lease } from "./models/Lease.js";
+import { Invoice } from "./models/Invoice.js";
 import { Payment } from "./models/Payment.js";
 import { MaintenanceRequest } from "./models/MaintenanceRequest.js";
 import { OnboardingDraft } from "./models/OnboardingDraft.js";
@@ -16,9 +17,11 @@ async function run() {
     await Promise.all([
       User.deleteMany({}),
       Lease.deleteMany({}),
+      Invoice.deleteMany({}),
       Payment.deleteMany({}),
       MaintenanceRequest.deleteMany({}),
-      OnboardingDraft.deleteMany({})
+      OnboardingDraft.deleteMany({}),
+      Notice.deleteMany({})
     ]);
 
     console.log("Creating users...");
@@ -47,16 +50,65 @@ async function run() {
 
     const lease = await Lease.create({
       tenant: tenant._id,
+      landlord: admin._id,
       unit: "2B1B",
       startDate: new Date("2025-08-01"),
       endDate: new Date("2026-07-31"),
       rentAmount: 1450,
       depositAmount: 1450,
+      paymentDueDay: 1,
+      gracePeriod: 5,
       status: "active",
       termsUrl: "https://example.com/lease.pdf"
     });
 
     console.log("Lease ID:", lease._id.toString());
+
+    console.log("Creating invoices...");
+
+    const invoices = await Invoice.insertMany([
+      {
+        invoiceNumber: "INV-2025-001",
+        tenant: tenant._id,
+        lease: lease._id,
+        issueDate: new Date("2025-08-25"),
+        dueDate: new Date("2025-09-01"),
+        status: "paid",
+        notes: "September rent plus storage fee.",
+        lineItems: [
+          { title: "September Rent", description: "Monthly rent", amount: 1450 },
+          { title: "Storage Locker", description: "Optional storage add-on", amount: 50 }
+        ]
+      },
+      {
+        invoiceNumber: "INV-2025-002",
+        tenant: tenant._id,
+        lease: lease._id,
+        issueDate: new Date("2025-09-25"),
+        dueDate: new Date("2025-10-01"),
+        status: "sent",
+        notes: "October rent, water usage estimate.",
+        lineItems: [
+          { title: "October Rent", description: "Monthly rent", amount: 1450 },
+          { title: "Water Utility", description: "Flat usage estimate", amount: 40 }
+        ]
+      },
+      {
+        invoiceNumber: "INV-2025-003",
+        tenant: tenant._id,
+        lease: lease._id,
+        issueDate: new Date("2025-10-25"),
+        dueDate: new Date("2025-11-01"),
+        status: "sent",
+        notes: "November rent and pet fee.",
+        lineItems: [
+          { title: "November Rent", description: "Monthly rent", amount: 1450 },
+          { title: "Pet Fee", description: "Monthly pet rent", amount: 75 }
+        ]
+      }
+    ]);
+
+    console.log("Invoice IDs:", invoices.map(i => i._id.toString()));
 
     console.log("Creating payments...");
 
@@ -64,25 +116,28 @@ async function run() {
       {
         tenant: tenant._id,
         lease: lease._id,
-        date: new Date("2025-10-01"),
-        amount: 1450,
+        invoice: invoices[0]._id,
+        date: new Date("2025-09-01"),
+        amount: 1500,
         status: "paid",
         method: "ach"
       },
       {
         tenant: tenant._id,
         lease: lease._id,
-        date: new Date("2025-11-01"),
-        amount: 1450,
-        status: "pending",
+        invoice: invoices[1]._id,
+        date: new Date("2025-10-01"),
+        amount: 1490,
+        status: "overdue",
         method: "ach"
       },
       {
         tenant: tenant._id,
         lease: lease._id,
-        date: new Date("2025-09-01"),
-        amount: 1450,
-        status: "overdue",
+        invoice: invoices[2]._id,
+        date: new Date("2025-11-01"),
+        amount: 1525,
+        status: "pending",
         method: "ach"
       }
     ]);
@@ -93,8 +148,11 @@ async function run() {
 
     const ticket = await MaintenanceRequest.create({
       tenant: tenant._id,
-      issueType: "Plumbing",
+      title: "Kitchen faucet leak",
+      issueCategory: "Plumbing",
       description: "Leaking faucet in kitchen.",
+      priority: "high",
+      permissionToEnter: true,
       status: "pending"
     });
 
@@ -121,8 +179,6 @@ async function run() {
     console.log("  Admin :", admin.email, "/", adminPassword);
 
     console.log("Creating notices...");
-
-    await Notice.deleteMany({});
 
     const notices = await Notice.insertMany([
       {
